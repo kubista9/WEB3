@@ -58,4 +58,16 @@ export type CardType =
 // Requirement 4
 export type TypedCard<T extends CardType> = Extract<CardTypes, { type: T }>;
 
-
+// Requirement 5 1/2
+export interface UnoDeck {
+    drawPile: CardTypes[]
+    discardPile: CardTypes[]
+    startTheGame(): void
+    shuffleDeck(): void
+    /*
+    drawFromDeck(): CardTypes
+    getDeckSize(): number
+    drawCards(number: number): CardTypes
+    discardCard(): CardTypes
+    */
+}
