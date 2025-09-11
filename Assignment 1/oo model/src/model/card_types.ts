@@ -6,10 +6,28 @@ export type Color = typeof ValidColors[number];
 export type NumberValue = typeof ValidNumbers[number];
 export type Action = typeof ValidActions[number];
 
+// Requirement 1 & 2
+export type CardTypes = NumberCard | SkipCard | ReverseCard | DrawTwoCard | WildCard | WildDrawFourCard;
+
 export interface NumberCard {
     readonly type: "Numbered";
     readonly color: Color;
     readonly value: NumberValue;
+}
+
+export interface SkipCard {
+    readonly type: "Skip";
+    readonly color: Color;
+}
+
+export interface ReverseCard {
+    readonly type: "Reverse";
+    readonly color: Color;
+}
+
+export interface DrawTwoCard {
+    readonly type: "Draw Two";
+    readonly color: Color;
 }
 
 export interface ActionCard {
@@ -24,4 +42,20 @@ export interface WildDrawFourCard {
     readonly type: "Wild Draw Four";
 }
 
-export type Card = NumberCard | ActionCard | WildCard | WildDrawFourCard;
+export interface BlankCard {
+    readonly type: "Blank";
+}
+
+// Requirement 3
+export type CardType =
+    | "Numbered"
+    | "Skip"
+    | "Reverse"
+    | "Draw Two"
+    | "Wild"
+    | "Wild Draw Four";
+
+// Requirement 4
+export type TypedCard<T extends CardType> = Extract<CardTypes, { type: T }>;
+
+
