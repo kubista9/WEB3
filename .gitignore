@@ -1,0 +1,6 @@
+*.pdf
+*.pptx
+package-lock.json
+.DS_Store
+*.docx
+node_modules/
