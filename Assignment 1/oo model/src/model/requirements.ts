@@ -1,23 +1,23 @@
-export const ValidColors = ["Red", "Green", "Blue", "Yellow"] as const;
-export const ValidNumbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
-export const ValidActions = ["Skip", "Reverse", "Draw Two"] as const;
+export const ValidColors = ["Red", "Green", "Blue", "Yellow"] as const
+export const ValidNumbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const
+export const ValidActions = ["Skip", "Reverse", "Draw Two"] as const
 
-export type Color = typeof ValidColors[number];
-export type NumberValue = typeof ValidNumbers[number];
-export type Action = typeof ValidActions[number];
+export type Color = typeof ValidColors[number]
+export type NumberValue = typeof ValidNumbers[number]
+export type Action = typeof ValidActions[number]
 
 // Requirement 1 & 2
-export type CardTypes = NumberCard | SkipCard | ReverseCard | DrawTwoCard | WildCard | WildDrawFourCard;
+export type CardTypes = NumberCard | SkipCard | ReverseCard | DrawTwoCard | WildCard | WildDrawFourCard
 
 export interface NumberCard {
-    readonly type: "Numbered";
-    readonly color: Color;
-    readonly value: NumberValue;
+    readonly type: "Numbered"
+    readonly color: Color
+    readonly value: NumberValue
 }
 
 export interface SkipCard {
-    readonly type: "Skip";
-    readonly color: Color;
+    readonly type: "Skip"
+    readonly color: Color
 }
 
 export interface ReverseCard {
@@ -26,24 +26,24 @@ export interface ReverseCard {
 }
 
 export interface DrawTwoCard {
-    readonly type: "Draw Two";
-    readonly color: Color;
+    readonly type: "Draw Two"
+    readonly color: Color
 }
 
 export interface ActionCard {
-    readonly type: Action;
-    readonly color: Color;
+    readonly type: Action
+    readonly color: Color
 }
 
 export interface WildCard {
-    readonly type: "Wild";
+    readonly type: "Wild"
 }
 export interface WildDrawFourCard {
-    readonly type: "Wild Draw Four";
+    readonly type: "Wild Draw Four"
 }
 
 export interface BlankCard {
-    readonly type: "Blank";
+    readonly type: "Blank"
 }
 
 // Requirement 3
@@ -53,7 +53,7 @@ export type CardType =
     | "Reverse"
     | "Draw Two"
     | "Wild"
-    | "Wild Draw Four";
+    | "Wild Draw Four"
 
 // Requirement 4
 export type TypedCard<T extends CardType> = Extract<CardTypes, { type: T }>;
@@ -71,4 +71,11 @@ export interface UnoDeck {
 }
 
 // Requirement 6
-
+export interface PlayerHand {
+    PlayerCards: CardTypes[]
+    playCard(card: CardTypes): void
+    takeCard(card: CardTypes): void
+    showHand(): CardTypes[]
+    getHandSize(): number
+    yellUno(): void
+}
