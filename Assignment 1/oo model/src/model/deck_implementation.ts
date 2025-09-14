@@ -1,4 +1,4 @@
-import { CardTypes, UnoDeck, ValidColors } from "./requirements";
+import { CardTypes, UnoDeck, ValidColors } from "./requirements"
 
 // Requirement 5 2/2
 export class Deck implements UnoDeck {
@@ -21,7 +21,7 @@ export class Deck implements UnoDeck {
 
             this.drawPile.push(
                 { type: "Skip", color: c },
-                { type: "Skip", color: c });
+                { type: "Skip", color: c })
             this.drawPile.push(
                 { type: "Reverse", color: c },
                 { type: "Reverse", color: c }

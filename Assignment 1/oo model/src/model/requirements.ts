@@ -70,7 +70,7 @@ export interface UnoDeck {
     discardCard(card: CardTypes): void
 }
 
-// Requirement 6
+// Requirement 6 1/2
 export interface PlayerHand {
     playerCards: CardTypes[]
     playCard(index: number): void
@@ -80,7 +80,7 @@ export interface PlayerHand {
     yellUno(): void
 }
 
-// Requirement 7
+// Requirement 7 1/2
 export interface UnoRound {
     startRound(playerNames: string[]): void
     dealCards(): void
@@ -91,4 +91,9 @@ export interface UnoRound {
     advancePlayer(): void
     checkPlayedCard(cardIndex: number, chosenColor?: string): void
 
+}
+
+// Optional 
+export interface UnoGame {
+    startGame(playerNames: string[]): void
 }

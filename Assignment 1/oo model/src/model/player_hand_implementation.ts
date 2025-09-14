@@ -1,6 +1,6 @@
-import { CardTypes, PlayerHand } from "./requirements.js";
+import { CardTypes, PlayerHand } from "./requirements.js"
 
-// Requirement 6
+// Requirement 6 2/2
 export class Hand implements PlayerHand {
     playerName: string
     playerCards: CardTypes[]
@@ -16,7 +16,7 @@ export class Hand implements PlayerHand {
             throw new Error("Invalid card index");
         }
         this.yellUno()
-        return this.playerCards.splice(index, 1)[0];
+        return this.playerCards.splice(index, 1)[0]
     }
 
     takeCard(card: CardTypes): void {

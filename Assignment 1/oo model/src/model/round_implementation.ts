@@ -1,8 +1,8 @@
-import { Deck } from "./deck_implementation";
-import { Hand } from "./player_hand_implementation";
+import { Deck } from "./deck_implementation"
+import { Hand } from "./player_hand_implementation"
 import { UnoRound, CardTypes } from "./requirements"
 
-// Requirement 7
+// Requirement 7 2/2
 export class Round implements UnoRound {
     deck: Deck
     players: Hand[]
@@ -90,7 +90,7 @@ export class Round implements UnoRound {
                 break
 
             case "Wild":
-                if (!chosenColor) throw new Error("Must choose a color for Wild");
+                if (!chosenColor) throw new Error("Must choose a color for Wild")
                 this.activeColor = chosenColor
                 break
 
