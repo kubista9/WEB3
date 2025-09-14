@@ -72,10 +72,23 @@ export interface UnoDeck {
 
 // Requirement 6
 export interface PlayerHand {
-    PlayerCards: CardTypes[]
-    playCard(card: CardTypes): void
+    playerCards: CardTypes[]
+    playCard(index: number): void
     takeCard(card: CardTypes): void
     showHand(): CardTypes[]
     getHandSize(): number
     yellUno(): void
+}
+
+// Requirement 7
+export interface UnoRound {
+    startRound(playerNames: string[]): void
+    dealCards(): void
+    flipOneCard(): void
+    playerTurn(): string
+    nextPlayer(): void
+    getTopCard(): CardTypes | undefined
+    advancePlayer(): void
+    checkPlayedCard(cardIndex: number, chosenColor?: string): void
+
 }

@@ -57,7 +57,7 @@ export class Deck implements UnoDeck {
         const cardsToTake: CardTypes[] = []
         for (let i = 0; i <= number; i++) {
             const cardFromPile = this.drawFromDeck()
-            if (cardFromPile) cardsToTake.push(cardFromPile);
+            if (cardFromPile) cardsToTake.push(cardFromPile)
         }
         return cardsToTake
     }
