@@ -64,10 +64,11 @@ export interface UnoDeck {
     discardPile: CardTypes[]
     startTheGame(): void
     shuffleDeck(): void
-    /*
-    drawFromDeck(): CardTypes
+    drawFromDeck(): CardTypes | undefined
     getDeckSize(): number
-    drawCards(number: number): CardTypes
-    discardCard(): CardTypes
-    */
+    drawCards(number: number): CardTypes[]
+    discardCard(card: CardTypes): void
 }
+
+// Requirement 6
+
