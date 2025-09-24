@@ -103,3 +103,12 @@ Create an implementation of playing a round according to the rules of UNO **exce
 - Define **memento types** to support saving and restoring the state of Deck, Hand, Round, and Game.  
 
 ---
+
+## Commands
+  npm install
+
+  npm test
+
+  npx jest deck.test.ts
+
+  npx ts-node deck.ts
