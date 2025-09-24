@@ -1,59 +1,59 @@
-export const ValidColors = ["Red", "Green", "Blue", "Yellow"] as const
+export const ValidColors = ["RED", "GREEN", "BLUE", "YELLOW"] as const
 export const ValidNumbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const
-export const ValidActions = ["Skip", "Reverse", "Draw Two"] as const
+export const ValidActions = ["SKIP", "REVERSE", "DRAW_TWO"] as const
 
 export type Color = typeof ValidColors[number]
 export type NumberValue = typeof ValidNumbers[number]
 export type Action = typeof ValidActions[number]
 
 // Requirement 1 & 2
-export type CardTypes = NumberCard | SkipCard | ReverseCard | DrawTwoCard | WildCard | WildDrawFourCard
+export type CardTypes = NUMBERED | SKIP | REVERSE | DRAW | WILD | WILD_DRAW_FOUR
 
-export interface NumberCard {
-    readonly type: "Numbered"
+export interface NUMBERED {
+    readonly type: "NUMBERED"
     readonly color: Color
-    readonly value: NumberValue
+    readonly number: NumberValue
 }
 
-export interface SkipCard {
-    readonly type: "Skip"
+export interface SKIP {
+    readonly type: "SKIP"
     readonly color: Color
 }
 
-export interface ReverseCard {
-    readonly type: "Reverse";
+export interface REVERSE {
+    readonly type: "REVERSE";
     readonly color: Color;
 }
 
-export interface DrawTwoCard {
-    readonly type: "Draw Two"
+export interface DRAW {
+    readonly type: "DRAW_TWO"
     readonly color: Color
 }
 
-export interface ActionCard {
+export interface ACTION {
     readonly type: Action
     readonly color: Color
 }
 
-export interface WildCard {
-    readonly type: "Wild"
+export interface WILD {
+    readonly type: "WILD"
 }
-export interface WildDrawFourCard {
-    readonly type: "Wild Draw Four"
+export interface WILD_DRAW_FOUR {
+    readonly type: "WILD_DRAW_FOUR"
 }
 
-export interface BlankCard {
-    readonly type: "Blank"
+export interface BLANK {
+    readonly type: "BLANK"
 }
 
 // Requirement 3
 export type CardType =
-    | "Numbered"
-    | "Skip"
-    | "Reverse"
-    | "Draw Two"
-    | "Wild"
-    | "Wild Draw Four"
+    | "NUMBERED"
+    | "SKIP"
+    | "REVERSE"
+    | "DRAW_TWO"
+    | "WILD"
+    | "WILD_DRAW_FOUR"
 
 // Requirement 4
 export type TypedCard<T extends CardType> = Extract<CardTypes, { type: T }>;
@@ -71,7 +71,7 @@ export interface UnoDeck {
 }
 
 // Requirement 6 1/2
-export interface PlayerHand {
+export interface UnoPlayer {
     playerCards: CardTypes[]
     playCard(index: number): void
     takeCard(card: CardTypes): void
@@ -99,7 +99,7 @@ export interface UnoGame {
 }
 
 export interface GameMemento {
-    players: string[];
-    scores: Record<string, number>;
-    roundsPlayed: number;
+    players: string[]
+    scores: Record<string, number>
+    roundsPlayed: number
 }

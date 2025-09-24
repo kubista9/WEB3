@@ -1,5 +1,5 @@
 import { CardTypes, UnoGame } from "./requirements"
-import { Round } from "./round_implementation"
+import { Round } from "./round"
 import { GameMemento } from "./requirements"
 
 export class Game implements UnoGame {
@@ -63,12 +63,12 @@ export class Game implements UnoGame {
 
     cardValue(card: CardTypes): number {
         switch (card.type) {
-            case "Numbered": return card.value;
-            case "Skip":
-            case "Reverse":
-            case "Draw Two": return 20;
-            case "Wild":
-            case "Wild Draw Four": return 50;
+            case "NUMBERED": return card.number;
+            case "SKIP":
+            case "REVERSE": return 20;
+            case "DRAW_TWO": return 20;
+            case "WILD":
+            case "WILD_DRAW_FOUR": return 50;
             default: return 0;
         }
     }
