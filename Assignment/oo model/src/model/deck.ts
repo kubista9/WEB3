@@ -1,4 +1,4 @@
-import { CardTypes, UnoDeck, colors } from "./requirements"
+import { CardTypes, UnoDeck, colors, Color } from "./requirements"
 import { standardShuffler } from "../utils/random_utils"
 
 // Requirement 5 2/2
@@ -22,13 +22,13 @@ export class Deck implements UnoDeck {
 
             for (let i = 0; i < 2; i++) {
                 this.cards.push(
-                    { type: "DRAW_CARD", color: color },
+                    { type: "DRAW CARD", color: color },
                     { type: "REVERSE", color: color },
                     { type: "SKIP", color: color }
                 )
             }
         }
-        
+
         for (let i = 0; i < 4; i++) {
             this.cards.push({ type: "WILD CARD" })
             this.cards.push({ type: "WILD DRAW" })
@@ -81,4 +81,65 @@ export class Deck implements UnoDeck {
     toArray(): CardTypes[] {
         return [...this.cards]
     }
+
+    toMemento(): Record<string, string | number>[] {
+        return this.cards.map(card => {
+            switch (card.type) {
+                case "NUMBERED":
+                    return { type: "NUMBERED", color: card.color, number: card.number }
+                case "SKIP":
+                case "REVERSE":
+                case "DRAW CARD":
+                    return { type: card.type, color: card.color }
+                case "WILD CARD":
+                case "WILD DRAW":
+                    return { type: card.type }
+                default:
+                    throw new Error(`Unsupported card type in toMemento: ${card}`)
+            }
+        }) as Record<string, string | number>[]
+    }
+
+    static fromMemento(cards: Record<string, string | number>[]): Deck {
+        const deck = new Deck()
+        for (const card of cards) {
+            switch (card.type) {
+                case "NUMBERED":
+                    if (typeof card.color !== "string" || typeof card.number !== "number") {
+                        throw new Error("Invalid NUMBERED card in memento")
+                    }
+                    deck.cards.push({
+                        type: "NUMBERED",
+                        color: card.color,
+                        number: card.number as any
+                    })
+                    break
+
+                case "SKIP":
+                case "REVERSE":
+                case "DRAW_CARD":
+                    if (typeof card.color !== "string") {
+                        throw new Error(`Missing color on ${card.type}`)
+                    }
+                    deck.cards.push({
+                        type: card.type,
+                        color: card.color as Color
+                    } as CardTypes)
+                    break
+
+                case "WILD CARD":
+                    deck.cards.push({ type: "WILD CARD" })
+                    break
+
+                case "WILD DRAW":
+                    deck.cards.push({ type: "WILD DRAW" })
+                    break
+
+                default:
+                    throw new Error(`Invalid card type in memento: ${card.type}`)
+            }
+        }
+        return deck
+    }
+
 }

@@ -71,7 +71,7 @@ describe("Initial deck", () => {
     }
   })
   it("contains 8 draw cards", () => {
-    expect(initialDeck.filter(is({type: 'DRAW_CARD'})).size).toEqual(8)
+    expect(initialDeck.filter(is({type: 'DRAW CARD'})).size).toEqual(8)
   })
   it("contains 2 draw cards of each color", () => {
     for(let color of reqirements.colors) {

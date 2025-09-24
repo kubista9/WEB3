@@ -12,7 +12,7 @@ export function createInitialDeck(): Deck {
 }
 
 export function createDeckFromMemento(cards: Record<string, string | number>[]): Deck {
-  return null as any
+  return Deck.fromMemento(cards)
 }
 
 export type HandConfig = {

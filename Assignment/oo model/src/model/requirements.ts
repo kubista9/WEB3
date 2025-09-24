@@ -26,7 +26,7 @@ export interface REVERSE {
 }
 
 export interface DRAW_CARD {
-    readonly type: "DRAW_CARD"
+    readonly type: "DRAW CARD"
     readonly color: Color
 }
 
