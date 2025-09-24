@@ -1,61 +1,63 @@
 import { CardTypes, UnoDeck, ValidColors } from "./requirements"
+import { standardShuffler } from "../utils/random_utils"
 
 // Requirement 5 2/2
 export class Deck implements UnoDeck {
-    drawPile: CardTypes[]
+    cards: CardTypes[]
     discardPile: CardTypes[]
 
     constructor() {
-        this.drawPile = []
+        this.cards = []
         this.discardPile = []
     }
 
     startTheGame(): void {
         for (const color of ValidColors) {
-            this.drawPile.push({ type: "NUMBERED", color: color, number: 0 })
+            this.cards.push({ type: "NUMBERED", color: color, number: 0 })
 
             for (let v = 1; v <= 9; v++) {
-                this.drawPile.push({ type: "NUMBERED", color: color, number: v as any })
-                this.drawPile.push({ type: "NUMBERED", color: color, number: v as any })
+                this.cards.push({ type: "NUMBERED", color: color, number: v as any })
+                this.cards.push({ type: "NUMBERED", color: color, number: v as any })
             }
 
-            this.drawPile.push(
+            this.cards.push(
                 { type: "SKIP", color: color },
                 { type: "SKIP", color: color })
-            this.drawPile.push(
+
+            this.cards.push(
                 { type: "REVERSE", color: color },
                 { type: "REVERSE", color: color }
             );
-            this.drawPile.push(
+            this.cards.push(
                 { type: "DRAW_TWO", color: color },
                 { type: "DRAW_TWO", color: color }
             );
         }
 
         for (let i = 0; i < 4; i++) {
-            this.drawPile.push({ type: "WILD" })
-            this.drawPile.push({ type: "WILD_DRAW_FOUR" })
+            this.cards.push({ type: "WILD" })
+            this.cards.push({ type: "WILD_DRAW" })
         }
 
-        this.shuffleDeck()
+        this.shuffle(this.cards)
     }
 
-    shuffleDeck(): void {
-        this.drawPile.sort(() => Math.random() - 0.5)
+    shuffle(cards: CardTypes[]): void {
+        standardShuffler(cards)
     }
 
 
     drawFromDeck(): CardTypes | undefined {
-        return this.drawPile.pop()
+        return this.cards.pop()
 
     }
     getDeckSize(): number {
-        return this.drawPile.length
+        return this.cards.length
     }
 
     drawCards(number: number): CardTypes[] {
         const cardsToTake: CardTypes[] = []
-        for (let i = 0; i < number; i++) {
+        for (let i = 0; i <= number; i++) {
             const cardFromPile = this.drawFromDeck()
             if (cardFromPile) cardsToTake.push(cardFromPile)
         }
@@ -64,5 +66,24 @@ export class Deck implements UnoDeck {
 
     discardCard(card: CardTypes): void {
         this.discardPile.push(card)
+    }
+
+    get size(): number {
+        return this.cards.length
+    }
+
+    deal(): CardTypes | undefined {
+        return this.cards.shift()
+    }
+
+    filter(predicate: (c: CardTypes) => boolean): Deck {
+        const newDeck = new Deck();
+        newDeck.cards = this.cards.filter(predicate);
+        return newDeck;
+   }
+
+    // expose raw cards (needed for shuffle and memento)
+    toArray(): CardTypes[] {
+        return [...this.cards]
     }
 }

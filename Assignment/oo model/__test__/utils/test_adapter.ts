@@ -1,8 +1,8 @@
 import { Randomizer, Shuffler, standardRandomizer, standardShuffler } from '../../src/utils/random_utils'
 import { Deck } from '../../src/model/deck'
 import { CardTypes } from '../../src/model/requirements'
-import {Round} from '../../src/model/round'
-import {Game} from '../../src/model/game'
+import { Round } from '../../src/model/round'
+import { Game } from '../../src/model/game'
 
 //Fill out the empty functions
 export function createInitialDeck(): Deck {
@@ -12,6 +12,7 @@ export function createInitialDeck(): Deck {
 }
 
 export function createDeckFromMemento(cards: Record<string, string | number>[]): Deck {
+  return null as any
 }
 
 export type HandConfig = {
@@ -43,6 +44,8 @@ export type GameConfig = {
 }
 
 export function createGame(props: Partial<GameConfig>): Game {
+  const game = new Game()
+  return game
 }
 
 export function createGameFromMemento(memento: any, randomizer: Randomizer = standardRandomizer, shuffler: Shuffler<Card> = standardShuffler): Game {

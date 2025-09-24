@@ -7,7 +7,7 @@ export type NumberValue = typeof ValidNumbers[number]
 export type Action = typeof ValidActions[number]
 
 // Requirement 1 & 2
-export type CardTypes = NUMBERED | SKIP | REVERSE | DRAW | WILD | WILD_DRAW_FOUR
+export type CardTypes = NUMBERED | SKIP | REVERSE | DRAW | WILD | WILD_DRAW
 
 export interface NUMBERED {
     readonly type: "NUMBERED"
@@ -38,8 +38,9 @@ export interface ACTION {
 export interface WILD {
     readonly type: "WILD"
 }
-export interface WILD_DRAW_FOUR {
-    readonly type: "WILD_DRAW_FOUR"
+
+export interface WILD_DRAW {
+    readonly type: "WILD_DRAW"
 }
 
 export interface BLANK {
@@ -53,7 +54,7 @@ export type CardType =
     | "REVERSE"
     | "DRAW_TWO"
     | "WILD"
-    | "WILD_DRAW_FOUR"
+    | "WILD_DRAW"
 
 // Requirement 4
 export type TypedCard<T extends CardType> = Extract<CardTypes, { type: T }>;
@@ -63,7 +64,7 @@ export interface UnoDeck {
     drawPile: CardTypes[]
     discardPile: CardTypes[]
     startTheGame(): void
-    shuffleDeck(): void
+    shuffle(cards: CardTypes[]): void
     drawFromDeck(): CardTypes | undefined
     getDeckSize(): number
     drawCards(number: number): CardTypes[]
