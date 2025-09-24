@@ -1,4 +1,4 @@
-import { CardTypes, UnoDeck, ValidColors } from "./requirements"
+import { CardTypes, UnoDeck, colors } from "./requirements"
 import { standardShuffler } from "../utils/random_utils"
 
 // Requirement 5 2/2
@@ -12,7 +12,7 @@ export class Deck implements UnoDeck {
     }
 
     startTheGame(): void {
-        for (const color of ValidColors) {
+        for (const color of colors) {
             this.cards.push({ type: "NUMBERED", color: color, number: 0 })
 
             for (let v = 1; v <= 9; v++) {
@@ -20,24 +20,20 @@ export class Deck implements UnoDeck {
                 this.cards.push({ type: "NUMBERED", color: color, number: v as any })
             }
 
-            this.cards.push(
-                { type: "SKIP", color: color },
-                { type: "SKIP", color: color })
-
-            this.cards.push(
-                { type: "REVERSE", color: color },
-                { type: "REVERSE", color: color }
-            );
-            this.cards.push(
-                { type: "DRAW_TWO", color: color },
-                { type: "DRAW_TWO", color: color }
-            );
+            for (let i = 0; i < 2; i++) {
+                this.cards.push(
+                    { type: "DRAW_CARD", color: color },
+                    { type: "REVERSE", color: color },
+                    { type: "SKIP", color: color }
+                )
+            }
         }
-
+        
         for (let i = 0; i < 4; i++) {
-            this.cards.push({ type: "WILD" })
-            this.cards.push({ type: "WILD_DRAW" })
+            this.cards.push({ type: "WILD CARD" })
+            this.cards.push({ type: "WILD DRAW" })
         }
+
 
         this.shuffle(this.cards)
     }
@@ -80,9 +76,8 @@ export class Deck implements UnoDeck {
         const newDeck = new Deck();
         newDeck.cards = this.cards.filter(predicate);
         return newDeck;
-   }
+    }
 
-    // expose raw cards (needed for shuffle and memento)
     toArray(): CardTypes[] {
         return [...this.cards]
     }

@@ -71,15 +71,15 @@ describe("Initial deck", () => {
     }
   })
   it("contains 8 draw cards", () => {
-    expect(initialDeck.filter(is({type: 'DRAW'})).size).toEqual(8)
+    expect(initialDeck.filter(is({type: 'DRAW_CARD'})).size).toEqual(8)
   })
   it("contains 2 draw cards of each color", () => {
     for(let color of reqirements.colors) {
-      expect(initialDeck.filter(is({type:'DRAW',color})).size).toBe(2)
+      expect(initialDeck.filter(is({type:'DRAW CARD',color})).size).toBe(2)
     }
   })
   it("contains 4 wild cards", () => {
-    expect(initialDeck.filter(is({type:'WILD'})).size).toEqual(4)
+    expect(initialDeck.filter(is({type:'WILD CARD'})).size).toEqual(4)
   })
   it("contains 4 wild draw cards", () => {
     expect(initialDeck.filter(is({ type:'WILD DRAW' })).size).toEqual(4)
