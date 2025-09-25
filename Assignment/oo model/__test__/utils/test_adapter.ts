@@ -23,16 +23,17 @@ export type HandConfig = {
 }
 
 export function createRound({
-    players, 
-    dealer, 
-    shuffler = standardShuffler,
-    cardsPerPlayer = 7
+  players,
+  dealer,
+  shuffler = standardShuffler,
+  cardsPerPlayer = 7
 }: HandConfig): Round {
   const round = new Round(players, dealer, shuffler, cardsPerPlayer)
   return round
 }
 
-export function createRoundFromMemento(memento: any, shuffler: Shuffler<Card> = standardShuffler): Round {
+export function createRoundFromMemento(memento: any, shuffler: Shuffler<CardTypes> = standardShuffler): Round {
+  return null as any
 }
 
 export type GameConfig = {
@@ -48,5 +49,6 @@ export function createGame(props: Partial<GameConfig>): Game {
   return game
 }
 
-export function createGameFromMemento(memento: any, randomizer: Randomizer = standardRandomizer, shuffler: Shuffler<Card> = standardShuffler): Game {
+export function createGameFromMemento(memento: any, randomizer: Randomizer = standardRandomizer, shuffler: Shuffler<CardTypes> = standardShuffler): Game {
+  return Game.fromMemento(memento, randomizer, shuffler)
 }

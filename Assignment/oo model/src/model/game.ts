@@ -1,11 +1,12 @@
 import { CardTypes, UnoGame } from "./requirements"
 import { Round } from "./round"
 import { GameMemento } from "./requirements"
+import { Randomizer, Shuffler, standardRandomizer, standardShuffler } from "../utils/random_utils"
 
 export class Game implements UnoGame {
     players: string[]
     scores: Record<string, number>
-    roundsPlayed: number;
+    roundsPlayed: number
 
     constructor() {
         this.players = []
@@ -15,10 +16,10 @@ export class Game implements UnoGame {
 
     startGame(playerNames: string[]): void {
         this.players = playerNames
-        //this.scores = Object.fromEntries(playerNames.map(p => [p, 0]));
-        this.scores = {};
+        //this.scores = Object.fromEntries(playerNames.map(p => [p, 0]))
+        this.scores = {}
         for (const p of playerNames) {
-            this.scores[p] = 0;
+            this.scores[p] = 0
         }
         this.roundsPlayed = 0
 
@@ -26,15 +27,15 @@ export class Game implements UnoGame {
             this.playRound();
         }
 
-        console.log("Winner is:", this.getWinner());
+        console.log("Winner is:", this.getWinner())
     }
 
     hasWinner(): boolean {
-        return Object.values(this.scores).some(score => score >= 500);
+        return Object.values(this.scores).some(score => score >= 500)
     }
 
     getWinner(): string | null {
-        return Object.entries(this.scores).find(([_, score]) => score >= 500)?.[0] || null; // _ means ignore playerName
+        return Object.entries(this.scores).find(([_, score]) => score >= 500)?.[0] || null // _ means ignore playerName
     }
 
     playRound(): void {
@@ -63,27 +64,22 @@ export class Game implements UnoGame {
 
     cardValue(card: CardTypes): number {
         switch (card.type) {
-            case "NUMBERED": return card.number;
-            case "SKIP":
-            case "REVERSE": return 20;
-            case "DRAW CARD": return 20;
-            case "WILD CARD":
-            case "WILD DRAW": return 50;
-            default: return 0;
+            case "NUMBERED": return card.number
+            case "SKIP": return 20
+            case "REVERSE": return 20
+            case "DRAW CARD": return 20
+            case "WILD CARD": return 50
+            case "WILD DRAW": return 50
+            default: return 0
         }
     }
 
-    saveToMemento(): GameMemento {
-        return {
-            players: [...this.players],
-            scores: { ...this.scores },
-            roundsPlayed: this.roundsPlayed
-        };
+    toMemento(): GameMemento {
+        return null as any
     }
 
-    restoreFromMemento(memento: GameMemento): void {
-        this.players = [...memento.players];
-        this.scores = { ...memento.scores };
-        this.roundsPlayed = memento.roundsPlayed;
+    static fromMemento(memento: GameMemento, randomizer: Randomizer = standardRandomizer, shuffler: Shuffler<CardTypes> = standardShuffler): Game {
+
+        return null as any
     }
 }
