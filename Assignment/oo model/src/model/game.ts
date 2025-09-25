@@ -38,11 +38,11 @@ export class Game implements UnoGame {
     }
 
     playRound(): void {
-        const round = new Round()
-        round.startRound(this.players)
+        const round = new Round(this.players, this.roundsPlayed % this.players.length, undefined, 7)
+        round.startRound()
 
         // first player with no card wins
-        let winner = round.players.find(p => p.getHandSize() === 0)
+        let winner = round.unoPlayers.find(p => p.getHandSize() === 0)
         if (winner) {
             const points = this.calculatePoints(round, winner.playerName)
         }
@@ -51,7 +51,7 @@ export class Game implements UnoGame {
 
     calculatePoints(round: Round, winner: string): number {
         let points = 0
-        for (const player of round.players) {
+        for (const player of round.unoPlayers) {
             if (player.playerName !== winner) {
                 for (const card of player.showHand()) {
                     points += this.cardValue(card)
@@ -66,9 +66,9 @@ export class Game implements UnoGame {
             case "NUMBERED": return card.number;
             case "SKIP":
             case "REVERSE": return 20;
-            case "DRAW_TWO": return 20;
-            case "WILD":
-            case "WILD_DRAW_FOUR": return 50;
+            case "DRAW CARD": return 20;
+            case "WILD CARD":
+            case "WILD DRAW": return 50;
             default: return 0;
         }
     }
