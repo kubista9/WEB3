@@ -34,7 +34,6 @@ export class Deck implements UnoDeck {
             this.cards.push({ type: "WILD DRAW" })
         }
 
-
         this.shuffle(this.cards)
     }
 
@@ -42,11 +41,10 @@ export class Deck implements UnoDeck {
         standardShuffler(cards)
     }
 
-
     drawFromDeck(): CardTypes | undefined {
         return this.cards.pop()
-
     }
+
     getDeckSize(): number {
         return this.cards.length
     }
@@ -117,7 +115,7 @@ export class Deck implements UnoDeck {
 
                 case "SKIP":
                 case "REVERSE":
-                case "DRAW_CARD":
+                case "DRAW CARD":
                     if (typeof card.color !== "string") {
                         throw new Error(`Missing color on ${card.type}`)
                     }
@@ -141,5 +139,12 @@ export class Deck implements UnoDeck {
         }
         return deck
     }
+}
 
+export function hasColor(card: CardTypes, color: Color): boolean {
+    return 'color' in card && card.color === color
+}
+
+export function hasNumber(card: CardTypes, number: number): boolean {
+    return card.type === "NUMBERED" && card.number === number
 }

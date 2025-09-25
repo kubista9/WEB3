@@ -135,8 +135,8 @@ describe('fromMemento', () => {
         { type: 'NUMBERED', color: 'BLUE', number: 7 },
         { type: 'SKIP', color: 'RED' },
         { type: 'REVERSE', color: 'GREEN' },
-        { type: 'DRAW', color: 'YELLOW' },
-        { type: 'WILD' },
+        { type: 'DRAW CARD', color: 'YELLOW' },
+        { type: 'WILD CARD' },
         { type: 'WILD DRAW' }
       ]
       const created: deck.Deck = createDeckFromMemento(cards)
@@ -154,11 +154,11 @@ describe('fromMemento', () => {
       expect(deck.hasColor(card, 'GREEN')).toBeTruthy()
 
       card = created.deal()!
-      expect(card.type).toEqual('DRAW')
+      expect(card.type).toEqual('DRAW CARD')
       expect(deck.hasColor(card, 'YELLOW')).toBeTruthy()
 
       card = created.deal()!
-      expect(card.type).toEqual('WILD')
+      expect(card.type).toEqual('WILD CARD')
 
       card = created.deal()!
       expect(card.type).toEqual('WILD DRAW')
@@ -200,8 +200,8 @@ describe("toMemento", () => {
         { type: 'NUMBERED', color: 'BLUE', number: 7 },
         { type: 'SKIP', color: 'RED' },
         { type: 'REVERSE', color: 'GREEN' },
-        { type: 'DRAW', color: 'YELLOW' },
-        { type: 'WILD' },
+        { type: 'DRAW CARD', color: 'YELLOW' },
+        { type: 'WILD CARD' },
         { type: 'WILD DRAW' }
       ]
       const created = createDeckFromMemento(cards)
