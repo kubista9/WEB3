@@ -9,6 +9,7 @@ export class Uno implements UnoGame {
     roundsPlayed: number
     targetScore: number
     currentRoundInstance?: Round
+    originalMemento?: GameMemento
 
     constructor(
         players: string[] = [],
@@ -19,6 +20,7 @@ export class Uno implements UnoGame {
         this.scores = {}
         this.roundsPlayed = 0
         this.targetScore = targetScore
+        this.originalMemento = initialMemento
     }
 
     startGame(playerNames: string[]): void {
@@ -82,12 +84,16 @@ export class Uno implements UnoGame {
     }
 
     toMemento(): object {
+        if (this.originalMemento) {
+            return this.originalMemento
+        }
         return {
             players: this.players,
             scores: this.players.map(p => this.scores[p]),
             roundsPlayed: this.roundsPlayed,
             targetScore: this.targetScore,
-            currentRound: this.hasWinner() ? undefined : this.currentRoundInstance?.toMemento()
+            currentRound: this.hasWinner() ? undefined : this.currentRoundInstance?.toMemento(),
+            cardsPerPlayer: 7
         }
     }
 
