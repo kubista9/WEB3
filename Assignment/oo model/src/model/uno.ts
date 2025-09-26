@@ -12,7 +12,7 @@ export class Uno implements UnoGame {
 
     constructor(
         players: string[] = [],
-        targetScore: number = 500,
+        targetScore: number,
         initialMemento?: GameMemento
     ) {
         this.players = players
@@ -99,9 +99,23 @@ export class Uno implements UnoGame {
         memento: GameMemento,
         shuffler: Shuffler<CardTypes> = standardShuffler
     ): Uno {
-        if (!memento.players || memento.players.length < 2)
-            throw Error("There must be more than one player")
-
+        if ((!memento.players || memento.players.length < 2))
+            throw Error("There is something wrong with the memento game setup")
+        if (memento.targetScore < 50)
+            throw new Error("The score has to be more than 50")
+        const winners = memento.scores.filter(s => s >= memento.targetScore)
+        if (memento.scores.some(s => s < 0)) {
+            throw new Error("Invalid memento: negative score")
+        }
+        if (memento.scores.length != memento.players.length)
+            throw new Error("There has to be equal number of scores and players")
+        if (winners.length > 1) {
+            throw new Error("Invalid memento: several winners")
+        }
+        const someoneWon = memento.scores.some(s => s >= memento.targetScore)
+        if (!someoneWon && !memento.currentRound) {
+            throw new Error("Invalid memento: unfinished game missing current round")
+        }
         const game = new Uno(memento.players, memento.targetScore, memento)
         game.scores = {}
         memento.players.forEach((p, i) => game.scores[p] = memento.scores[i])
