@@ -1,4 +1,4 @@
-import { CardTypes, UnoDeck, colors, Color } from "./requirements"
+import { CardTypes, UnoDeck, colors, Color } from "./interfaces"
 import { standardShuffler } from "../utils/random_utils"
 
 // Requirement 5 2/2

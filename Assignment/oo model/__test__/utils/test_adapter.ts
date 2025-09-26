@@ -1,6 +1,6 @@
 import { Randomizer, Shuffler, standardRandomizer, standardShuffler } from '../../src/utils/random_utils'
 import { Deck } from '../../src/model/deck'
-import { CardTypes } from '../../src/model/requirements'
+import { CardTypes } from '../../src/model/interfaces'
 import { Round } from '../../src/model/round'
 import { Uno } from '../../src/model/uno'
 

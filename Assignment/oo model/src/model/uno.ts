@@ -1,6 +1,6 @@
-import { CardTypes, UnoGame } from "./requirements"
+import { CardTypes, UnoGame } from "./interfaces"
 import { Round } from "./round"
-import { GameMemento } from "./requirements"
+import { GameMemento } from "./interfaces"
 import { Randomizer, Shuffler, standardRandomizer, standardShuffler } from "../utils/random_utils"
 
 export class Uno implements UnoGame {

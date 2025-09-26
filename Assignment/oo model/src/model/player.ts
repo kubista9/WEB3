@@ -1,4 +1,4 @@
-import { CardTypes, UnoPlayer } from "./requirements.js"
+import { CardTypes, UnoPlayer } from "./interfaces.js"
 
 // Requirement 6 2/2
 export class Player implements UnoPlayer {

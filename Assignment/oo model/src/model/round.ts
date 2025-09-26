@@ -1,5 +1,5 @@
 import { Deck } from "./deck"
-import { UnoRound, CardTypes, UnoPlayer, RoundMemento } from "./requirements"
+import { UnoRound, CardTypes, UnoPlayer, RoundMemento } from "./interfaces"
 import { Player } from "./player"
 
 // Requirement 7 2/2
@@ -256,7 +256,7 @@ export class Round implements UnoRound {
         this.endCallbacks.push(callback)
     }
 
-    // update play() to handle ending the round
+    // to do
     play(index: number, chosenColor?: string): void {
         if (this.ended) throw new Error("Round has ended")
         this.checkPlayedCard(index, chosenColor)
