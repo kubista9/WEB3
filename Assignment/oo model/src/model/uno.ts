@@ -8,12 +8,17 @@ export class Uno implements UnoGame {
     scores: Record<string, number>
     roundsPlayed: number
     targetScore: number
+    currentRoundInstance?: Round
 
-    constructor() {
-        this.players = []
+    constructor(
+        players: string[] = [],
+        targetScore: number = 500,
+        initialMemento?: GameMemento
+    ) {
+        this.players = players
         this.scores = {}
         this.roundsPlayed = 0
-        this.targetScore = 500
+        this.targetScore = targetScore
     }
 
     startGame(playerNames: string[]): void {
@@ -41,13 +46,13 @@ export class Uno implements UnoGame {
     }
 
     playRound(): void {
-        const round = new Round(this.players, this.roundsPlayed % this.players.length, undefined, 7)
-        round.startRound()
+        this.currentRoundInstance = new Round(this.players, this.roundsPlayed % this.players.length, undefined, 7)
+        this.currentRoundInstance.startRound()
 
         // first player with no card wins
-        let winner = round.unoPlayers.find(p => p.getHandSize() === 0)
+        let winner = this.currentRoundInstance.unoPlayers.find(p => p.getHandSize() === 0)
         if (winner) {
-            const points = this.calculatePoints(round, winner.playerName)
+            const points = this.calculatePoints(this.currentRoundInstance, winner.playerName)
         }
         this.roundsPlayed++
     }
@@ -76,18 +81,42 @@ export class Uno implements UnoGame {
         }
     }
 
-    toMemento(): GameMemento {
+    toMemento(): object {
         return {
             players: this.players,
             scores: this.players.map(p => this.scores[p]),
             roundsPlayed: this.roundsPlayed,
             targetScore: this.targetScore,
+            currentRound: this.hasWinner() ? undefined : this.currentRoundInstance?.toMemento()
         }
-
     }
 
-    static fromMemento(memento: GameMemento, randomizer: Randomizer = standardRandomizer, shuffler: Shuffler<CardTypes> = standardShuffler): Uno {
+    static fromMemento(
+        memento: GameMemento,
+        randomizer: Randomizer = standardRandomizer,
+        shuffler: Shuffler<CardTypes> = standardShuffler
+    ): Uno {
 
-        return null as any
+        const game = new Uno(memento.players, memento.targetScore, memento)
+        // rebuild scores
+        game.scores = {}
+        memento.players.forEach((p, i) => game.scores[p] = memento.scores[i])
+        return game
+    }
+
+    player(index: number): string {
+        return this.players[index]
+    }
+
+    currentRound(): Round | undefined {
+        return this.currentRoundInstance
+    }
+
+    score(index: number): number {
+        return this.scores[this.players[index]]
+    }
+
+    winner(): number {
+        return this.players.findIndex(p => this.scores[p] >= this.targetScore)
     }
 }

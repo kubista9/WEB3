@@ -1,3 +1,4 @@
+import { Round } from "./round"
 export const colors = ["BLUE", "GREEN", "RED", "YELLOW"]
 export const ValidNumbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 export const ValidActions = ["SKIP", "REVERSE", "DRAW"] as const
@@ -99,8 +100,23 @@ export interface UnoGame {
     startGame(playerNames: string[]): void
 }
 
+export interface RoundMemento {
+    players: string[]
+    hands: CardTypes[][]
+    drawPile: CardTypes[]
+    discardPile: CardTypes[]
+    currentColor: string
+    currentDirection: "clockwise" | "counterclockwise"
+    dealer: number
+    playerInTurn: number
+}
+
 export interface GameMemento {
     players: string[]
-    scores: Record<string, number>
+    scores: number[]
     roundsPlayed: number
+    targetScore: number
+    currentRound?: Round
+    cardsPerPlayer: number, 
+    
 }

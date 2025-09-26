@@ -1,5 +1,5 @@
 import { Deck } from "./deck"
-import { UnoRound, CardTypes, UnoPlayer } from "./requirements"
+import { UnoRound, CardTypes, UnoPlayer, RoundMemento } from "./requirements"
 import { Player } from "./player"
 
 // Requirement 7 2/2
@@ -118,7 +118,46 @@ export class Round implements UnoRound {
             case "NUMBERED":
                 this.activeColor = card.color
                 break
-
         }
+    }
+
+    toMemento(): RoundMemento {
+        return {
+            players: this.players,
+            hands: this.unoPlayers.map(p => p.showHand()),
+            drawPile: [...this.deck.cards],
+            discardPile: [...this.deck.discardPile],
+            currentColor: this.activeColor ?? "",
+            currentDirection: this.direction === 1 ? "clockwise" : "counterclockwise",
+            dealer: this.dealer,
+            playerInTurn: this.currentPlayerIndex
+        }
+    }
+
+    static fromMemento(memento: RoundMemento, shuffler?: any): Round {
+        const round = new Round(memento.players, memento.dealer, shuffler, memento.hands[0]?.length ?? 7)
+        round.unoPlayers.forEach((player, i) => {
+            for (const card of memento.hands[i]) {
+                player.takeCard(card)
+            }
+        })
+
+        round.deck.cards = [...memento.drawPile]
+        round.deck.discardPile = [...memento.discardPile]
+        round.activeColor = memento.currentColor
+        round.direction = memento.currentDirection === "clockwise" ? 1 : -1
+        round.currentPlayerIndex = memento.playerInTurn
+
+        return round
+    }
+
+    play(index: number, chosenColor?: string): void {
+        this.checkPlayedCard(index, chosenColor)
+        const player = this.unoPlayers[this.currentPlayerIndex]
+        if (player.getHandSize() === 0) {
+            return
+        }
+
+        this.advancePlayer()
     }
 }
