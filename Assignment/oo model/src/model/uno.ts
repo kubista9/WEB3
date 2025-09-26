@@ -3,15 +3,17 @@ import { Round } from "./round"
 import { GameMemento } from "./requirements"
 import { Randomizer, Shuffler, standardRandomizer, standardShuffler } from "../utils/random_utils"
 
-export class Game implements UnoGame {
+export class Uno implements UnoGame {
     players: string[]
     scores: Record<string, number>
     roundsPlayed: number
+    targetScore: number
 
     constructor() {
         this.players = []
         this.scores = {}
         this.roundsPlayed = 0
+        this.targetScore = 500
     }
 
     startGame(playerNames: string[]): void {
@@ -31,7 +33,7 @@ export class Game implements UnoGame {
     }
 
     hasWinner(): boolean {
-        return Object.values(this.scores).some(score => score >= 500)
+        return Object.values(this.scores).some(score => score >= this.targetScore)
     }
 
     getWinner(): string | null {
@@ -75,10 +77,16 @@ export class Game implements UnoGame {
     }
 
     toMemento(): GameMemento {
-        return null as any
+        return {
+            players: this.players,
+            scores: this.players.map(p => this.scores[p]),
+            roundsPlayed: this.roundsPlayed,
+            targetScore: this.targetScore,
+        }
+
     }
 
-    static fromMemento(memento: GameMemento, randomizer: Randomizer = standardRandomizer, shuffler: Shuffler<CardTypes> = standardShuffler): Game {
+    static fromMemento(memento: GameMemento, randomizer: Randomizer = standardRandomizer, shuffler: Shuffler<CardTypes> = standardShuffler): Uno {
 
         return null as any
     }
