@@ -91,10 +91,17 @@ export class Uno implements UnoGame {
         }
     }
 
+    getNumberOfPlayers(): number {
+        return this.players.length
+    }
+
     static fromMemento(
         memento: GameMemento,
         shuffler: Shuffler<CardTypes> = standardShuffler
     ): Uno {
+        if (!memento.players || memento.players.length < 2)
+            throw Error("There must be more than one player")
+
         const game = new Uno(memento.players, memento.targetScore, memento)
         game.scores = {}
         memento.players.forEach((p, i) => game.scores[p] = memento.scores[i])
@@ -128,3 +135,5 @@ export class Uno implements UnoGame {
         return undefined
     }
 }
+
+
