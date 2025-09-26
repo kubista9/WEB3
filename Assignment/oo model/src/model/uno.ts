@@ -118,6 +118,13 @@ export class Uno implements UnoGame {
 
     winner(): number | undefined {
         const index = this.players.findIndex(p => this.scores[p] >= this.targetScore)
-        return index >= 0 ? index : undefined
+        if (index >= 0) return index
+
+        if (this.currentRoundInstance) {
+            const roundWinner = this.currentRoundInstance.unoPlayers.findIndex(p => p.getHandSize() === 0)
+            if (roundWinner >= 0) return roundWinner
+        }
+
+        return undefined
     }
 }
