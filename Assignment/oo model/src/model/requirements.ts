@@ -117,6 +117,5 @@ export interface GameMemento {
     roundsPlayed: number
     targetScore: number
     currentRound?: Round
-    cardsPerPlayer: number, 
-    
+    cardsPerPlayer: number,
 }

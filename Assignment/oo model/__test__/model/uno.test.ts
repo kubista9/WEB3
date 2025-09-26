@@ -1,6 +1,6 @@
 import { describe, it, test, expect } from '@jest/globals'
 import { createGame, createGameFromMemento } from '../utils/test_adapter'
-import { Uno, GameMemento } from '../../src/model/uno'
+import { Game } from "../../src/model/game"
 
 describe("Game set up", () => {
   const game: Game = createGame({ players: ['a', 'b', 'c', 'd'], targetScore: 500 })

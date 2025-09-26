@@ -11,9 +11,9 @@ export class Player implements UnoPlayer {
         this.playerCards = []
     }
 
-    playCard(index: number): CardTypes {
+    playCard(index: number): CardTypes | undefined {
         if (index < 0 || index >= this.playerCards.length) {
-            throw new Error("Invalid card index");
+            return undefined
         }
         this.yellUno()
         return this.playerCards.splice(index, 1)[0]

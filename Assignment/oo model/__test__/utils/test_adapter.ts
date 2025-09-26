@@ -50,5 +50,5 @@ export function createGame(props: Partial<GameConfig>): Uno {
 }
 
 export function createGameFromMemento(memento: any, randomizer: Randomizer = standardRandomizer, shuffler: Shuffler<CardTypes> = standardShuffler): Uno {
-  return Uno.fromMemento(memento, randomizer, shuffler)
+  return Uno.fromMemento(memento, shuffler)
 }
