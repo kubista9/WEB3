@@ -93,14 +93,14 @@ export class Uno implements UnoGame {
 
     static fromMemento(
         memento: GameMemento,
-        randomizer: Randomizer = standardRandomizer,
         shuffler: Shuffler<CardTypes> = standardShuffler
     ): Uno {
-
         const game = new Uno(memento.players, memento.targetScore, memento)
-        // rebuild scores
         game.scores = {}
         memento.players.forEach((p, i) => game.scores[p] = memento.scores[i])
+        if (memento.currentRound) {
+            game.currentRoundInstance = Round.fromMemento(memento.currentRound as any, shuffler)
+        }
         return game
     }
 
@@ -116,7 +116,8 @@ export class Uno implements UnoGame {
         return this.scores[this.players[index]]
     }
 
-    winner(): number {
-        return this.players.findIndex(p => this.scores[p] >= this.targetScore)
+    winner(): number | undefined {
+        const index = this.players.findIndex(p => this.scores[p] >= this.targetScore)
+        return index >= 0 ? index : undefined
     }
 }
