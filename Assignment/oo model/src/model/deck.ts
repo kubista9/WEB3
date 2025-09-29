@@ -1,5 +1,5 @@
 import { CardTypes, UnoDeck, colors, Color } from "./interfaces"
-import { standardShuffler } from "../utils/random_utils"
+import { standardShuffler, Shuffler } from "../utils/random_utils"
 
 // Requirement 5 2/2
 export class Deck implements UnoDeck {
@@ -34,12 +34,13 @@ export class Deck implements UnoDeck {
             this.cards.push({ type: "WILD DRAW" })
         }
 
-        this.shuffle(this.cards)
+        this.shuffle()
     }
 
-    shuffle(cards: CardTypes[]): void {
-        standardShuffler(cards)
+    shuffle(shuffler: Shuffler<CardTypes> = standardShuffler): void {
+        shuffler(this.cards)
     }
+
 
     drawFromDeck(): CardTypes | undefined {
         return this.cards.pop()
@@ -51,7 +52,7 @@ export class Deck implements UnoDeck {
 
     drawCards(number: number): CardTypes[] {
         const cardsToTake: CardTypes[] = []
-        for (let i = 0; i <= number; i++) {
+        for (let i = 0; i < number; i++) {
             const cardFromPile = this.drawFromDeck()
             if (cardFromPile) cardsToTake.push(cardFromPile)
         }
@@ -148,3 +149,4 @@ export function hasColor(card: CardTypes, color: Color): boolean {
 export function hasNumber(card: CardTypes, number: number): boolean {
     return card.type === "NUMBERED" && card.number === number
 }
+
