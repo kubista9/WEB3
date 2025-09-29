@@ -101,7 +101,7 @@ describe("Deck methods", () => {
   })
   describe("deal", () => {
     let deck: deck.Deck = createInitialDeck()
-    let shuffledCards: Readonly<deck.Card[]> = []
+    let shuffledCards: Readonly<reqirements.CardTypes[]> = []
     const memoShuffler = memoizingShuffler(standardShuffler)
     beforeEach(() => {
       deck = createInitialDeck()
