@@ -4,7 +4,6 @@ import { CardTypes } from '../../src/model/interfaces'
 import { Round } from '../../src/model/round'
 import { Game } from '../../src/model/game'
 
-//Fill out the empty functions
 export function createInitialDeck(): Deck {
   const deck = new Deck()
   deck.startTheGame()
