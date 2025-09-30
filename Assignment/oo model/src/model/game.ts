@@ -5,25 +5,28 @@ export class Game implements UnoGame {
     players: string[]
     scores: number[]
     targetScore: number
-    currentRound?: Round
+    _currentRound?: Round
     roundsPlayed: number
+    cardsPerPlayer: number
+    originalMemento?: GameMemento
 
     constructor(players: string[], targetScore: number) {
         this.players = players
         this.scores = []
         this.targetScore = targetScore
         this.roundsPlayed = 0
+        this.cardsPerPlayer = 0
     }
 
     // to do
     startGame(playerNames: string[]): void {
-        while (!this.hasWinner()) {
+        while (!this.winner()) {
             const newRound = new Round(playerNames, null, null, 7)
             newRound.play(1)
         }
     }
 
-    hasWinner(): boolean {
+    winner(): boolean {
         return this.scores.some(s => s >= this.targetScore)
     }
 
@@ -32,13 +35,14 @@ export class Game implements UnoGame {
     }
 
     toMemento(): GameMemento {
+        if (this.originalMemento) return this.originalMemento
         return {
-            players: this.players,
+            players: [...this.players],
             scores: [...this.scores],
             roundsPlayed: this.roundsPlayed,
             targetScore: this.targetScore,
-            currentRound: this.currentRound,
-            cardsPerPlayer: 7
+            currentRound: this.winner() !== undefined ? undefined : this._currentRound?.toMemento(),
+            cardsPerPlayer: this.cardsPerPlayer,
         }
     }
 
@@ -47,8 +51,21 @@ export class Game implements UnoGame {
         game.scores = [...memento.scores]
         game.roundsPlayed = memento.roundsPlayed
         if (memento.currentRound) {
-            game.currentRound = Round.fromMemento(memento.currentRound, null)
+            game._currentRound = Round.fromMemento(memento.currentRound, null)
         }
         return game
+    }
+
+    playerCount(): number {
+        return this.players.length
+    }
+
+    score(index: number): number {
+        if (index < 0 || index >= this.players.length) throw new Error("Player index out of bounds")
+        return this.scores[index]
+    }
+
+    currentRound(): Round | undefined {
+        return this._currentRound
     }
 }

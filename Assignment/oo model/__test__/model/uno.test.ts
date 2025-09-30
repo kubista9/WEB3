@@ -1,6 +1,7 @@
 import { describe, it, test, expect } from '@jest/globals'
 import { createGame, createGameFromMemento } from '../utils/test_adapter'
 import { Game } from "../../src/model/game"
+import {GameMemento } from "../../src/model/interfaces"
 
 describe("Game set up", () => {
   const game: Game = createGame({ players: ['a', 'b', 'c', 'd'], targetScore: 500 })
@@ -67,12 +68,12 @@ describe("Playing a round", () => {
     currentRound: {
       players: ['a', 'b', 'c', 'd'],
       hands: [
-        [{ color: 'GREEN', type: 'DRAW' }],
+        [{ color: 'GREEN', type: 'DRAW CARD' }],
         [{ color: 'BLUE', type: 'NUMBERED', number: 8 }],
         [{ type: 'WILD DRAW' }],
         [{ type: 'NUMBERED', color: 'YELLOW', number: 3 }],
       ],
-      drawPile: [{ type: 'NUMBERED', color: 'GREEN', number: 5 }, { type: 'WILD' }],
+      drawPile: [{ type: 'NUMBERED', color: 'GREEN', number: 5 }, { type: 'WILD CARD' }],
       discardPile: [{ type: 'NUMBERED', color: 'BLUE', number: 8 }],
       currentColor: 'BLUE',
       currentDirection: 'clockwise',
@@ -133,11 +134,11 @@ describe("ending the second round", () => {
       players: ['a', 'b', 'c', 'd'],
       hands: [
         [{ color: 'GREEN', type: 'NUMBERED', number: 8 }],
-        [{ color: 'BLUE', type: 'DRAW' }],
+        [{ color: 'BLUE', type: 'DRAW CARD' }],
         [{ type: 'WILD DRAW' }],
         [{ type: 'NUMBERED', color: 'YELLOW', number: 3 }],
       ],
-      drawPile: [{ type: 'NUMBERED', color: 'GREEN', number: 5 }, { type: 'WILD' }],
+      drawPile: [{ type: 'NUMBERED', color: 'GREEN', number: 5 }, { type: 'WILD CARD' }],
       discardPile: [{ type: 'NUMBERED', color: 'BLUE', number: 8 }],
       currentColor: 'BLUE',
       currentDirection: 'clockwise',
@@ -173,12 +174,12 @@ describe("ending the third round", () => {
     currentRound: {
       players: ['a', 'b', 'c', 'd'],
       hands: [
-        [{ color: 'BLUE', type: 'DRAW' }],
+        [{ color: 'BLUE', type: 'DRAW CARD' }],
         [{ type: 'WILD DRAW' }],
         [{ color: 'GREEN', type: 'SKIP' }],
         [{ type: 'NUMBERED', color: 'YELLOW', number: 3 }],
       ],
-      drawPile: [{ type: 'WILD' }, { type: 'REVERSE', color: 'RED' }],
+      drawPile: [{ type: 'WILD CARD' }, { type: 'REVERSE', color: 'RED' }],
       discardPile: [{ type: 'NUMBERED', color: 'BLUE', number: 8 }],
       currentColor: 'BLUE',
       currentDirection: 'clockwise',
