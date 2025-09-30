@@ -1,8 +1,8 @@
-import { Round } from "./round"
 export const colors = ["BLUE", "GREEN", "RED", "YELLOW"]
 export const ValidNumbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 export const ValidActions = ["SKIP", "REVERSE", "DRAW"] as const
 
+export type Direction = "clockwise" | "counterclockwise"
 export type Color = typeof colors[number]
 export type NumberValue = typeof ValidNumbers[number]
 export type Action = typeof ValidActions[number]
@@ -106,7 +106,7 @@ export interface RoundMemento {
     drawPile: CardTypes[]
     discardPile: CardTypes[]
     currentColor: string
-    currentDirection: "clockwise" | "counterclockwise"
+    currentDirection: Direction
     dealer: number
     playerInTurn: number
 }
