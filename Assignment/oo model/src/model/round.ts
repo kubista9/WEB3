@@ -1,5 +1,5 @@
 import { Deck } from "./deck"
-import { UnoRound, CardTypes, UnoPlayer, RoundMemento } from "./interfaces"
+import { UnoRound, CardTypes, RoundMemento } from "./interfaces"
 import { Player } from "./player"
 
 // Requirement 7 2/2
@@ -212,7 +212,7 @@ export class Round implements UnoRound {
             if (this.deck.cards.length === 0) {
                 // reshuffle from discard (leave top card)
                 const top = this.deck.discardPile.pop()
-                this.deck.shuffle(this.deck.discardPile)
+                this.deck.shuffle(this.shuffler)
                 this.deck.cards = this.deck.discardPile
                 this.deck.discardPile = top ? [top] : []
             }
