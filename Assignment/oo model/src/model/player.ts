@@ -15,7 +15,6 @@ export class Player implements UnoPlayer {
         if (index < 0 || index >= this.playerCards.length) {
             return undefined
         }
-        this.yellUno()
         return this.playerCards.splice(index, 1)[0]
     }
 
@@ -24,7 +23,6 @@ export class Player implements UnoPlayer {
     }
 
     showHand(): CardTypes[] {
-        console.log(this.playerCards)
         return [...this.playerCards]
     }
 

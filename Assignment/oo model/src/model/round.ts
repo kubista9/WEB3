@@ -19,6 +19,9 @@ export class Round implements UnoRound {
     unoCalls: Set<number> = new Set()
     accusedAlready: Set<number> = new Set()
     lastAction: "play" | "draw" | undefined
+    turnFrozen: boolean = false
+    lastPlayedBy: number | null = null
+
 
     constructor(players: string[], dealer: any, shuffler: any, cardsPerPlayer: number) {
         this.players = players
@@ -76,14 +79,17 @@ export class Round implements UnoRound {
     }
 
     advancePlayer(): void {
-        this.currentPlayerIndex =
-            (this.currentPlayerIndex + this.direction + this.players.length) %
-            this.players.length
+        this.currentPlayerIndex = (this.currentPlayerIndex + this.direction + this.players.length) % this.players.length
+        this.turnFrozen = false
     }
 
     checkPlayedCard(cardIndex: number, chosenColor?: string): void {
         const player = this.unoPlayers[this.currentPlayerIndex]
         const card = player.playCard(cardIndex)
+
+        if (card) {
+            this.deck.discardCard(card)
+        }
 
         if (player.getHandSize() === 0 && !this.unoCalls.has(this.currentPlayerIndex)) {
             for (let i = 0; i < 4; i++) {
@@ -164,6 +170,8 @@ export class Round implements UnoRound {
         if (!card) throw new Error("No cards left to draw")
         this.unoPlayers[this.currentPlayerIndex].takeCard(card)
         this.lastAction = "draw"
+        this.lastPlayedBy = this.currentPlayerIndex
+        this.turnFrozen = false // accusation window closes
         this.advancePlayer()
     }
 
@@ -183,10 +191,10 @@ export class Round implements UnoRound {
             for (const card of p.showHand()) {
                 switch (card.type) {
                     case "NUMBERED": total += card.number; break
-                    case "SKIP":
-                    case "REVERSE":
+                    case "SKIP": total += 20; break
+                    case "REVERSE": total += 20; break
                     case "DRAW CARD": total += 20; break
-                    case "WILD CARD":
+                    case "WILD CARD": total += 50; break
                     case "WILD DRAW": total += 50; break
                 }
             }
@@ -200,21 +208,26 @@ export class Round implements UnoRound {
         if (this.accusedAlready.has(accused)) return false
 
         const accusedPlayer = this.unoPlayers[accused]
+
         // must have exactly 1 card
         if (accusedPlayer.getHandSize() !== 1) return false
-        // must have just played
-        if (this.lastAction !== "play") return false
-        // must not have called UNO
+
+        // must be in the accusation window (after playing to 1 card, before next player acts)
+        if (!this.turnFrozen) return false
+
+        // the accused must be the one who just played
+        if (this.lastPlayedBy !== accused) return false
+
+        // fails if UNO was said by the accused player
         if (this.unoCalls.has(accused)) return false
 
-        // punish: draw 4 cards
+        // draw 4 penalty
         for (let i = 0; i < 4; i++) {
             if (this.deck.cards.length === 0) {
-                // reshuffle from discard (leave top card)
                 const top = this.deck.discardPile.pop()
-                this.deck.shuffle(this.shuffler)
                 this.deck.cards = this.deck.discardPile
                 this.deck.discardPile = top ? [top] : []
+                this.deck.shuffle(this.shuffler)
             }
             const card = this.deck.drawFromDeck()
             if (card) accusedPlayer.takeCard(card)
@@ -228,8 +241,11 @@ export class Round implements UnoRound {
         return this.unoPlayers[index].showHand()
     }
 
-    drawPile() {
-        return { size: this.deck.cards.length }
+    drawPile(): Deck {
+        // Return a Deck object that wraps the actual draw pile
+        const d = new Deck()
+        d.cards = this.deck.cards
+        return d
     }
 
     sayUno(index: number): void {
@@ -256,22 +272,29 @@ export class Round implements UnoRound {
         this.endCallbacks.push(callback)
     }
 
-    // to do
     play(index: number, chosenColor?: string): void {
         if (this.ended) throw new Error("Round has ended")
+        const current = this.currentPlayerIndex
         this.checkPlayedCard(index, chosenColor)
         this.lastAction = "play"
-        const player = this.unoPlayers[this.currentPlayerIndex]
+        this.lastPlayedBy = current
+        this.turnFrozen = true  // open accusation window
+
+        const player = this.unoPlayers[current]
         if (player.getHandSize() === 0) {
             this.ended = true
-            this.winnerIndex = this.currentPlayerIndex
+            this.winnerIndex = current
             this.endCallbacks.forEach(cb => cb({ winner: this.winnerIndex! }))
             return
         }
+
         this.advancePlayer()
     }
 
-    discardPile() {
-
+    discardPile(): Deck {
+        // Return a Deck object that wraps the actual discard pile
+        const d = new Deck()
+        d.cards = this.deck.discardPile
+        return d
     }
 }

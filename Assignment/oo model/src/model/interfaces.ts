@@ -75,7 +75,7 @@ export interface UnoDeck {
 // Requirement 6 1/2
 export interface UnoPlayer {
     playerCards: CardTypes[]
-    playCard(index: number): void
+    playCard(index: number): CardTypes | undefined
     takeCard(card: CardTypes): void
     showHand(): CardTypes[]
     getHandSize(): number
