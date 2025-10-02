@@ -49,7 +49,6 @@ export class Uno implements UnoGame {
 
     playRound(): void {
         this.currentRoundInstance = new Round(this.players, this.roundsPlayed % this.players.length, undefined, 7)
-        this.currentRoundInstance.startRound()
 
         // first player with no card wins
         let winner = this.currentRoundInstance.unoPlayers.find(p => p.getHandSize() === 0)
@@ -155,7 +154,7 @@ export class Uno implements UnoGame {
         return undefined
     }
 
-    
+
 }
 
 

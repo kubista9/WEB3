@@ -1,5 +1,6 @@
 import { UnoGame, GameMemento } from "./interfaces"
 import { Round } from "./round"
+import { standardShuffler } from "../utils/random_utils"
 
 export class Game implements UnoGame {
     players: string[]
@@ -20,8 +21,9 @@ export class Game implements UnoGame {
 
     // to do
     startGame(playerNames: string[]): void {
+        const shuffler = standardShuffler
         while (!this.winner()) {
-            const newRound = new Round(playerNames, null, null, 7)
+            const newRound = new Round(playerNames, 1, shuffler, 7)
             newRound.play(1)
         }
     }

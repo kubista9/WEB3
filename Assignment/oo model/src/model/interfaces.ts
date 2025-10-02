@@ -50,12 +50,12 @@ export interface BLANK {
 
 // Requirement 3
 export type CardType =
-  | { type: "NUMBERED"; color: "RED" | "GREEN" | "BLUE" | "YELLOW"; number: number }
-  | { type: "SKIP"; color: "RED" | "GREEN" | "BLUE" | "YELLOW" }
-  | { type: "REVERSE"; color: "RED" | "GREEN" | "BLUE" | "YELLOW" }
-  | { type: "DRAW CARD"; color: "RED" | "GREEN" | "BLUE" | "YELLOW" }
-  | { type: "WILD CARD" }
-  | { type: "WILD DRAW" }
+    | { type: "NUMBERED"; color: "RED" | "GREEN" | "BLUE" | "YELLOW"; number: number }
+    | { type: "SKIP"; color: "RED" | "GREEN" | "BLUE" | "YELLOW" }
+    | { type: "REVERSE"; color: "RED" | "GREEN" | "BLUE" | "YELLOW" }
+    | { type: "DRAW CARD"; color: "RED" | "GREEN" | "BLUE" | "YELLOW" }
+    | { type: "WILD CARD" }
+    | { type: "WILD DRAW" }
 
 // Requirement 4
 export type TypedCard<T extends CardType> = Extract<CardTypes, { type: T }>;
@@ -84,34 +84,17 @@ export interface UnoPlayer {
 
 // Requirement 7 1/2
 export interface UnoRound {
-  // players & hands
-  player(index: number): string
-  playerHand(index: number): CardTypes[]
-  playerCount: number
-
-  // piles
-  drawPile(): { deal(): CardTypes | undefined; size: number }
-  discardPile(): { top(): CardTypes | undefined; size: number }
-
-  // round state
-  dealer: number
-  playerInTurn(): number | undefined
-  canPlay(index: number): boolean
-  canPlayAny(): boolean
-
-  // gameplay
-  play(index: number, chosenColor?: string): void
-  sayUno(index: number): void
-  catchUnoFailure(args: { accuser: number; accused: number }): boolean
-
-  // lifecycle
-  hasEnded(): boolean
-  winner(): number | undefined
-  score(): number | undefined
-  onEnd(callback: (e: { winner: number }) => void): void
-
-  // memento
-  toMemento(): RoundMemento
+    player(index: number): string
+    playerHand(index: number): CardTypes[]
+    playerCount: number
+    drawPile(): { deal(): CardTypes | undefined; size: number }
+    discardPile(): { top(): CardTypes | undefined; size: number }
+    dealer: number
+    playerInTurn(): number | undefined
+    play(index: number, chosenColor?: string): void
+    sayUno(index: number): void
+    catchUnoFailure(args: { accuser: number; accused: number }): boolean
+    toMemento(): RoundMemento
 }
 
 // Optional 
