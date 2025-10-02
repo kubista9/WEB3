@@ -2,6 +2,18 @@ import { Deck } from "./deck"
 import { UnoRound, CardTypes, RoundMemento } from "./interfaces"
 import { Player } from "./player"
 
+// Normalizer: make sure shorthand types in memento match internal naming
+function normalizeCard(card: any): CardTypes {
+  switch (card.type) {
+    case "WILD CARD":
+      return { type: "WILD CARD" }
+    case "DRAW CARD":
+      return { type: "DRAW CARD", color: card.color }
+    default:
+      return card as CardTypes
+  }
+}
+
 export class Round implements UnoRound {
   players: string[]
   unoPlayers: Player[]
