@@ -47,6 +47,9 @@ export class Game implements UnoGame {
     }
 
     static fromMemento(memento: GameMemento): Game {
+        if (memento.players.length !== memento.scores.length) {
+            throw new Error("Memento is corrupted: players and scores length mismatch")
+        }
         const game = new Game(memento.players, memento.targetScore)
         game.scores = [...memento.scores]
         game.roundsPlayed = memento.roundsPlayed

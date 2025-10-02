@@ -32,7 +32,7 @@ export function createRound({
 }
 
 export function createRoundFromMemento(memento: any, shuffler: Shuffler<CardTypes> = standardShuffler): Round {
-  return null as any
+  return Round.fromMemento(memento, shuffler)
 }
 
 export type GameConfig = {
