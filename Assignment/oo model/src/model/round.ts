@@ -33,6 +33,13 @@ export class Round implements UnoRound {
         this.direction = 1
         this.activeColor = undefined
         this.deck = new Deck()
+        if (this.deck.discardPile.length === 0 && this.deck.cards.length > 0) {
+            const first = this.deck.drawFromDeck();
+            if (first) {
+                this.deck.discardCard(first);
+                this.activeColor = "color" in first ? first.color : undefined;
+            }
+        }
     }
 
     startRound(): void {
@@ -84,55 +91,59 @@ export class Round implements UnoRound {
     }
 
     checkPlayedCard(cardIndex: number, chosenColor?: string): void {
-        const player = this.unoPlayers[this.currentPlayerIndex]
-        const card = player.playCard(cardIndex)
+        const player = this.unoPlayers[this.currentPlayerIndex];
+        const card = player.playCard(cardIndex);
 
-        if (card) {
-            this.deck.discardCard(card)
-        }
+        if (!card) return;
+        this.deck.discardCard(card);
 
+        // Handle UNO penalty if they forgot to say it
         if (player.getHandSize() === 0 && !this.unoCalls.has(this.currentPlayerIndex)) {
             for (let i = 0; i < 4; i++) {
-                const c = this.deck.drawFromDeck()
-                if (c) player.takeCard(c)
+                const c = this.deck.drawFromDeck();
+                if (c) player.takeCard(c);
             }
         }
 
-        switch (card?.type) {
+        switch (card.type) {
             case "REVERSE":
-                this.direction *= -1
-                if (this.players.length === 2) this.advancePlayer()
-                break
+                this.direction *= -1;
+                if (this.players.length === 2) this.advancePlayer();
+                this.activeColor = card.color;   // ✅ update active color
+                break;
 
             case "SKIP":
-                this.advancePlayer()
-                break
+                this.advancePlayer();
+                this.activeColor = card.color;   // ✅ update active color
+                break;
 
             case "DRAW CARD":
-                this.advancePlayer()
-                this.unoPlayers[this.currentPlayerIndex].takeCard(this.deck.drawFromDeck()!)
-                this.unoPlayers[this.currentPlayerIndex].takeCard(this.deck.drawFromDeck()!)
-                break
+                this.advancePlayer();
+                this.unoPlayers[this.currentPlayerIndex].takeCard(this.deck.drawFromDeck()!);
+                this.unoPlayers[this.currentPlayerIndex].takeCard(this.deck.drawFromDeck()!);
+                this.activeColor = card.color;   // ✅ update active color
+                break;
 
             case "WILD CARD":
-                if (!chosenColor) throw new Error("Must choose a color for Wild")
-                this.activeColor = chosenColor
-                break
+                if (!chosenColor) throw new Error("Must choose a color for Wild");
+                this.activeColor = chosenColor;  // ✅ chosen color decides active color
+                break;
 
             case "WILD DRAW":
-                if (!chosenColor) throw new Error("Must choose a color for Wild Draw Four")
-                this.activeColor = chosenColor
-                this.advancePlayer()
+                if (!chosenColor) throw new Error("Must choose a color for Wild Draw Four");
+                this.activeColor = chosenColor;
+                this.advancePlayer();
                 for (let i = 0; i < 4; i++) {
-                    this.unoPlayers[this.currentPlayerIndex].takeCard(this.deck.drawFromDeck()!)
+                    this.unoPlayers[this.currentPlayerIndex].takeCard(this.deck.drawFromDeck()!);
                 }
-                break
+                break;
 
             case "NUMBERED":
-                this.activeColor = card.color
-                break
+                this.activeColor = card.color;   // ✅ update active color
+                break;
         }
     }
+
 
     toMemento(): RoundMemento {
         return {
@@ -259,8 +270,48 @@ export class Round implements UnoRound {
     }
 
     canPlay(index: number): boolean {
-        if (this.ended) return false
-        return index >= 0 && index < this.unoPlayers[this.currentPlayerIndex].getHandSize()
+        if (this.ended) return false;
+
+        const hand = this.unoPlayers[this.currentPlayerIndex].showHand();
+        if (index < 0 || index >= hand.length) return false;
+
+        const card = hand[index];
+        const top = this.getTopCard();
+        if (!top) return false;
+
+        // --- Wild card ---
+        if (card.type === "WILD CARD") return true;
+
+        // --- Wild Draw Four ---
+        if (card.type === "WILD DRAW") {
+            // Must not have any other playable card of the active color
+            if (this.activeColor) {
+                const hasPlayableColor = hand.some(c =>
+                    "color" in c && c.color === this.activeColor
+                );
+                return !hasPlayableColor;
+            }
+            // if no activeColor set, always legal
+            return true;
+        }
+
+        // Determine the current effective color
+        const currentColor = this.activeColor || ("color" in top ? top.color : undefined);
+
+        // --- Color match ---
+        if ("color" in card && card.color === currentColor) return true;
+
+        // --- Number match ---
+        if (card.type === "NUMBERED" && top.type === "NUMBERED" && card.number === top.number) {
+            return true;
+        }
+
+        // --- Action match (skip, reverse, draw) ---
+        if (card.type === top.type && card.type !== "NUMBERED") {
+            return true;
+        }
+
+        return false;
     }
 
     canPlayAny(): boolean {
