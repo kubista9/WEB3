@@ -64,6 +64,9 @@ export class Round implements UnoRound {
             },
             get size() {
                 return self.deck.cards.length
+            },
+            peek(): CardTypes[] {
+                return self.deck.cards.slice(0, 3)
             }
         }
     }
