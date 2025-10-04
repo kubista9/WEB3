@@ -19,7 +19,6 @@ export class Game implements UnoGame {
         this.cardsPerPlayer = 0
     }
 
-    // to do
     startGame(playerNames: string[]): void {
         const shuffler = standardShuffler
         while (!this.winner()) {

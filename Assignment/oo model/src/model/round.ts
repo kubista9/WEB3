@@ -47,7 +47,6 @@ export class Round implements UnoRound {
         this.playerCount = players.length
     }
 
-    // === Accessors expected by tests ===
     player(index: number): string {
         return this.players[index]
     }
@@ -75,7 +74,7 @@ export class Round implements UnoRound {
         const self = this
         return {
             top(): CardTypes | undefined {
-                return self.deck.discardPile[0] // ✅ first element = top
+                return self.deck.discardPile[0]
             },
             get size() {
                 return self.deck.discardPile.length
@@ -87,7 +86,6 @@ export class Round implements UnoRound {
         return this.ended ? undefined : this.currentPlayerIndex
     }
 
-    // === Gameplay ===
     getTopCard(): CardTypes | undefined {
         return this.deck.discardPile.at(-1)
     }
@@ -121,7 +119,6 @@ export class Round implements UnoRound {
         const card = player.playCard(cardIndex)
         if (!card) return
 
-        // push card to top of discard
         this.deck.discardPile.unshift(card)
 
         switch (card.type) {
@@ -182,7 +179,6 @@ export class Round implements UnoRound {
         return false
     }
 
-    // === UNO ===
     sayUno(index: number): void {
         if (index < 0 || index >= this.unoPlayers.length) throw new Error("Invalid player index")
         if (this.ended) throw new Error("Round has ended")
@@ -215,7 +211,6 @@ export class Round implements UnoRound {
         return true
     }
 
-    // === Memento ===
     toMemento(): RoundMemento {
         return {
             players: this.players,
@@ -230,7 +225,6 @@ export class Round implements UnoRound {
     }
 
     static fromMemento(m: RoundMemento, shuffler?: any): Round {
-        // --- validation ---
         if (!m.players || m.players.length < 2) throw new Error("Invalid memento: less than 2 players")
         if (m.hands.length !== m.players.length) throw new Error("Invalid memento: hands length mismatch")
         if (m.discardPile.length === 0) throw new Error("Invalid memento: empty discard pile")
@@ -256,7 +250,6 @@ export class Round implements UnoRound {
             throw new Error("Invalid memento: inconsistent currentColor with discard pile")
         }
 
-        // --- build round ---
         const round = new Round(m.players, m.dealer, shuffler, m.hands[0]?.length ?? 7)
 
         round.unoPlayers.forEach((p, i) => {
