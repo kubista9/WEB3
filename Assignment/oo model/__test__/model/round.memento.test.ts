@@ -7,8 +7,8 @@ const memento = {
   players: ['A', 'B', 'C'],
   hands: [
     [
-      { type: 'WILD' },
-      { type: 'DRAW', color: 'GREEN' },
+      { type: 'WILD CARD' },
+      { type: 'DRAW CARD', color: 'GREEN' },
     ],
     [
       { type: 'REVERSE', color: 'GREEN' },

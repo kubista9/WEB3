@@ -111,7 +111,8 @@ export class Game {
   }
 
   private startNewRound(): void {
-    const dealer = Math.floor(this.randomizer(4) * this.players.length);
+    const randomValue = this.randomizer(4);
+    const dealer = Math.floor(randomValue * this.players.length);
     this._currentRound = new Round(
       this.players,
       dealer,

@@ -1,4 +1,3 @@
-// src/model/round.ts
 import { Card, Color, Direction, RoundMemento, colors } from './interfaces';
 import { Deck, hasColor } from './deck';
 import { Shuffler, standardShuffler } from '../utils/random_utils';
@@ -125,24 +124,27 @@ export class Round {
     if (cardIndex >= hand.length) return false;
     
     const card = hand[cardIndex];
+    const topCard = this._discardPile.top();
     
     // Wild card can always be played
     if (card.type === 'WILD CARD') return true;
     
-    // Wild Draw 4: can only play if no matching color in hand
+    // Wild Draw 4: can only play if no card of current color in hand
     if (card.type === 'WILD DRAW') {
       return !hand.some(c => 'color' in c && c.color === this.currentColor);
     }
     
     // Colored cards
     if ('color' in card) {
+      // Matching color
       if (card.color === this.currentColor) return true;
       
-      const topCard = this._discardPile.top();
+      // Matching number
       if (card.type === 'NUMBERED' && topCard.type === 'NUMBERED' && card.number === topCard.number) {
         return true;
       }
       
+      // Matching type (for special cards)
       if (card.type === topCard.type && card.type !== 'NUMBERED') {
         return true;
       }
@@ -188,7 +190,7 @@ export class Round {
     }
     
     this.lastPlayedPlayer = this._playerInTurn;
-    this.unoSaid.delete(this._playerInTurn);
+    // Don't delete UNO said status here - it should persist until caught or new card played
     
     // Check if player won
     if (hand.length === 0) {
@@ -253,11 +255,17 @@ export class Round {
     if (this.lastPlayedPlayer !== params.accused) return false;
     if (this.hands[params.accused].length !== 1) return false;
     
-    if (this._playerInTurn !== this.getNextPlayer(params.accused)) return false;
+    // Check if it's still the accusation window (before next player acts)
+    const nextPlayer = this.getNextPlayer(params.accused);
+    if (this._playerInTurn !== nextPlayer) return false;
     
+    // Check if UNO was said before OR after playing (before next action)
     if (this.unoSaid.has(params.accused)) return false;
     
+    // Add 4 cards as penalty and clear the catch window
     this.drawCardsForPlayer(params.accused, 4);
+    // After catching, prevent re-catching
+    this.unoSaid.add(params.accused);
     return true;
   }
 
@@ -362,9 +370,13 @@ export class Round {
     if (!card && this._discardPile.size > 1) {
       const discardMem = this._discardPile.toMemento();
       const topCard = discardMem.shift()!;
-      this._drawPile = Deck.fromMemento(discardMem);
-      this._drawPile.shuffle(this.shuffler);
+      
+      // Create new draw pile from remaining discard cards
+      const cardsToShuffle = discardMem.map(c => Deck.fromMemento([c]).deal()!);
+      this.shuffler(cardsToShuffle);
+      this._drawPile = new Deck(cardsToShuffle);
       this._discardPile = Deck.fromMemento([topCard]);
+      
       card = this._drawPile.deal();
     }
     

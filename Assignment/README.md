@@ -1,6 +1,6 @@
 ## Tests passed
 
-50 failed, 188 passed 03.10
+40 failed, 198 passed 06.10
 
 ## Commands
   npm install

@@ -104,15 +104,15 @@ describe('catching failure to say "UNO!"', () => {
     .is({ type: 'NUMBERED', color: 'RED', number: 5 })
     .hand(0).is({ type: 'NUMBERED', color: 'BLUE', number: 8 }, { type: 'SKIP', color: 'BLUE' })
     .hand(1).is({ type: 'NUMBERED', color: 'RED', number: 8 }, { type: 'SKIP', color: 'GREEN' })
-    .hand(2).is({ type: 'NUMBERED', color: 'GREEN', number: 8 }, { type: 'DRAW', color: 'RED' })
+    .hand(2).is({ type: 'NUMBERED', color: 'GREEN', number: 8 }, { type: 'DRAW CARD', color: 'RED' })
     .hand(3).is({ type: 'NUMBERED', color: 'RED', number: 4 }, { type: 'REVERSE', color: 'RED' })
 
   describe("emptying the draw pile", () => {
     const memento = {
       players: ['a', 'b', 'c', 'd'],
       hands: [
-        [{ type: 'NUMBERED', color: 'GREEN', number: 3 }, { type: 'WILD' }],
-        [{ type: 'REVERSE', color: 'GREEN' }, { type: 'DRAW', color: 'BLUE' }],
+        [{ type: 'NUMBERED', color: 'GREEN', number: 3 }, { type: 'WILD CARD' }],
+        [{ type: 'REVERSE', color: 'GREEN' }, { type: 'DRAW CARD', color: 'BLUE' }],
         [{ type: 'NUMBERED', color: 'GREEN', number: 8 }, { type: 'NUMBERED', color: 'GREEN', number: 0 }],
         [{ type: 'NUMBERED', color: 'GREEN', number: 0 }, { type: 'NUMBERED', color: 'RED', number: 5 }],
       ],
@@ -187,7 +187,7 @@ describe('catching failure to say "UNO!"', () => {
       players: ['a', 'b', 'c', 'd'],
       hands: [
         [{ type: 'NUMBERED', color: 'GREEN', number: 1 }, { type: 'WILD CARD' }],
-        [{ type: 'REVERSE', color: 'GREEN' }, { type: 'DRAW', color: 'BLUE' }],
+        [{ type: 'REVERSE', color: 'GREEN' }, { type: 'DRAW CARD', color: 'BLUE' }],
         [{ type: 'NUMBERED', color: 'GREEN', number: 8 }, { type: 'NUMBERED', color: 'GREEN', number: 0 }],
         [{ type: 'NUMBERED', color: 'GREEN', number: 3 }, { type: 'NUMBERED', color: 'RED', number: 5 }],
       ],

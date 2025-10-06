@@ -1,4 +1,3 @@
-// src/model/interfaces.ts
 export const colors = ['BLUE', 'GREEN', 'RED', 'YELLOW'] as const;
 export type Color = typeof colors[number];
 

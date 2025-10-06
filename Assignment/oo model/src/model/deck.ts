@@ -1,3 +1,4 @@
+// src/model/deck.ts
 import { Card, Color, colors, CardTypes } from './interfaces';
 
 export { Card, Color, CardTypes };
