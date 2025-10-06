@@ -2,7 +2,7 @@
   "name": "uno",
   "version": "0.0.1",
   "description": "Uno",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "jest"
   },
@@ -14,12 +14,16 @@
   "author": "Ole Ildsgaard Hougaard",
   "license": "ISC",
   "dependencies": {
+    "@apollo/client": "^4.0.7",
     "@babel/core": "^7.24.6",
     "@babel/preset-env": "^7.24.6",
     "@babel/preset-typescript": "^7.24.6",
+    "apollo-server": "^3.13.0",
     "babel-jest": "^29.7.0",
+    "graphql": "^16.11.0",
     "jest": "^29.7.0",
     "ts-loader": "^9.5.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "uuid": "^13.0.0"
   }
 }

@@ -11,6 +11,10 @@
 
   npx ts-node deck.ts
 
+  npm create vue@latest client
+
+  npm run dev
+
 # UNO Game Implementation 🎮
 
 This project is an object-oriented TypeScript implementation of the classic UNO card game.  
