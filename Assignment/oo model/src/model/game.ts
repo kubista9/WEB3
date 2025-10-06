@@ -1,4 +1,3 @@
-// src/model/game.ts
 import { GameMemento } from './interfaces';
 import { Round } from './round';
 import { Shuffler, Randomizer, standardShuffler, standardRandomizer } from '../utils/random_utils';
@@ -23,7 +22,7 @@ export class Game {
   ) {
     if (players.length < 2) throw new Error('At least 2 players required');
     if (targetScore <= 0) throw new Error('Target score must be positive');
-    
+
     this.players = players;
     this._targetScore = targetScore;
     this.cardsPerPlayer = cardsPerPlayer;
@@ -75,12 +74,12 @@ export class Game {
     if (memento.targetScore <= 0) throw new Error('Target score must be positive');
     if (memento.scores.some(s => s < 0)) throw new Error('Negative scores not allowed');
     if (memento.scores.length !== memento.players.length) throw new Error('Mismatched scores and players');
-    
+
     const winners = memento.scores.filter(s => s >= memento.targetScore).length;
     if (winners > 1) throw new Error('Multiple winners');
-    
+
     if (winners === 0 && !memento.currentRound) throw new Error('Missing currentRound in unfinished game');
-    
+
     const game = Object.create(Game.prototype);
     game.players = memento.players;
     game._targetScore = memento.targetScore;
@@ -89,13 +88,13 @@ export class Game {
     game.shuffler = shuffler;
     game.randomizer = randomizer;
     game._winner = winners === 1 ? memento.scores.findIndex(s => s >= memento.targetScore) : undefined;
-    
+
     if (memento.currentRound) {
       game._currentRound = Round.fromMemento(memento.currentRound, game.shuffler);
       game._currentRound.onEnd((event: { winner: number }) => {
         const roundScore = game._currentRound!.score()!;
         game.scores[event.winner] += roundScore;
-        
+
         if (game.scores[event.winner] >= game._targetScore) {
           game._winner = event.winner;
           game._currentRound = undefined;
@@ -106,7 +105,7 @@ export class Game {
     } else {
       game._currentRound = undefined;
     }
-    
+
     return game;
   }
 
@@ -119,11 +118,11 @@ export class Game {
       this.shuffler,
       this.cardsPerPlayer
     );
-    
+
     this._currentRound.onEnd(event => {
       const roundScore = this._currentRound!.score()!;
       this.scores[event.winner] += roundScore;
-      
+
       if (this.scores[event.winner] >= this._targetScore) {
         this._winner = event.winner;
         this._currentRound = undefined;

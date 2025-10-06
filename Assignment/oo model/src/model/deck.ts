@@ -1,4 +1,3 @@
-// src/model/deck.ts
 import { Card, Color, colors, CardTypes } from './interfaces';
 
 export { Card, Color, CardTypes };
@@ -24,7 +23,7 @@ export class Deck {
 
   startTheGame(): void {
     this.cards = [];
-    
+
     // Numbered cards
     for (const color of colors) {
       this.cards.push({ type: 'NUMBERED', color, number: 0 });
@@ -81,7 +80,7 @@ export class Deck {
   static fromMemento(memento: Record<string, string | number>[]): Deck {
     const cards: Card[] = memento.map(cardData => {
       const type = cardData.type as string;
-      
+
       if (type === 'NUMBERED') {
         if (!('color' in cardData) || !('number' in cardData)) {
           throw new Error('Invalid numbered card');
@@ -106,7 +105,7 @@ export class Deck {
       if (type === 'WILD DRAW') {
         return { type: 'WILD DRAW' };
       }
-      
+
       throw new Error(`Invalid card type: ${type}`);
     });
 
