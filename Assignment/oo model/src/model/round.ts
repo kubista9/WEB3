@@ -1,320 +1,382 @@
-import { Deck } from "./deck"
-import { UnoRound, CardTypes, RoundMemento } from "./interfaces"
-import { Player } from "./player"
+// src/model/round.ts
+import { Card, Color, Direction, RoundMemento, colors } from './interfaces';
+import { Deck, hasColor } from './deck';
+import { Shuffler, standardShuffler } from '../utils/random_utils';
 
-// Normalizer: make sure shorthand types in memento match internal naming
-function normalizeCard(card: any): CardTypes {
-    switch (card.type) {
-        case "WILD CARD":
-            return { type: "WILD CARD" }
-        case "DRAW CARD":
-            return { type: "DRAW CARD", color: card.color }
-        default:
-            return card as CardTypes
+export class Round {
+  private players: string[];
+  private hands: Card[][];
+  private _drawPile: Deck;
+  private _discardPile: Deck;
+  private currentColor: Color;
+  private currentDirection: Direction;
+  private _dealer: number;
+  private _playerInTurn: number | undefined;
+  private shuffler: Shuffler<Card>;
+  private unoSaid: Set<number> = new Set();
+  private lastPlayedPlayer: number | undefined;
+  private ended: boolean = false;
+  private endCallbacks: Array<(event: { winner: number }) => void> = [];
+
+  constructor(
+    players: string[],
+    dealer: number,
+    shuffler: Shuffler<Card> = standardShuffler,
+    cardsPerPlayer: number = 7
+  ) {
+    if (players.length < 2) throw new Error('At least 2 players required');
+    if (players.length > 10) throw new Error('Maximum 10 players');
+
+    this.players = players;
+    this._dealer = dealer;
+    this.shuffler = shuffler;
+    
+    // Initialize deck
+    const deck = new Deck();
+    deck.startTheGame();
+    deck.shuffle(this.shuffler);
+    
+    // Deal cards
+    this.hands = this.players.map(() => []);
+    for (let i = 0; i < cardsPerPlayer; i++) {
+      for (let p = 0; p < this.players.length; p++) {
+        const card = deck.deal();
+        if (card) this.hands[p].push(card);
+      }
     }
-}
-
-export class Round implements UnoRound {
-    players: string[]
-    unoPlayers: Player[]
-    dealer: number
-    shuffler: any
-    cardsPerPlayer: number
-    currentPlayerIndex: number
-    direction: 1 | -1
-    activeColor: string | undefined
-    deck: Deck
-    ended: boolean = false
-    winnerIndex: number | undefined
-    endCallbacks: ((e: { winner: number }) => void)[] = []
-    unoCalls: Set<number> = new Set()
-    accusedAlready: Set<number> = new Set()
-    lastAction: "play" | "draw" | undefined
-    turnFrozen: boolean = false
-    lastPlayedBy: number | null = null
-    playerCount: number
-
-    constructor(players: string[], dealer: number, shuffler: any, cardsPerPlayer: number) {
-        this.players = players
-        this.unoPlayers = players.map(name => new Player(name))
-        this.dealer = dealer
-        this.shuffler = shuffler
-        this.cardsPerPlayer = cardsPerPlayer
-        this.currentPlayerIndex = 0
-        this.direction = 1
-        this.activeColor = undefined
-        this.deck = new Deck()
-        this.playerCount = players.length
-    }
-
-    player(index: number): string {
-        return this.players[index]
-    }
-
-    playerHand(index: number): CardTypes[] {
-        return this.unoPlayers[index].showHand()
-    }
-
-    drawPile() {
-        const self = this
-        return {
-            deal(): CardTypes | undefined {
-                return self.deck.cards.shift()
-            },
-            get size() {
-                return self.deck.cards.length
-            },
-            peek(): CardTypes[] {
-                return self.deck.cards.slice(0, 3)
-            }
+    
+    // Set up discard pile - reshuffle if wild card on top
+    let topCard = deck.deal();
+    while (topCard && (topCard.type === 'WILD CARD' || topCard.type === 'WILD DRAW')) {
+      const newDeck = new Deck();
+      newDeck.startTheGame();
+      newDeck.shuffle(this.shuffler);
+      
+      this.hands = this.players.map(() => []);
+      for (let i = 0; i < cardsPerPlayer; i++) {
+        for (let p = 0; p < this.players.length; p++) {
+          const card = newDeck.deal();
+          if (card) this.hands[p].push(card);
         }
+      }
+      topCard = newDeck.deal();
+      this._drawPile = newDeck;
     }
-
-    discardPile() {
-        const self = this
-        return {
-            top(): CardTypes | undefined {
-                return self.deck.discardPile[0]
-            },
-            get size() {
-                return self.deck.discardPile.length
-            }
-        }
+    
+    if (!topCard) throw new Error('Failed to initialize discard pile');
+    
+    this._discardPile = new Deck([topCard]);
+    this._drawPile = deck;
+    
+    this.currentColor = 'color' in topCard ? topCard.color : 'BLUE';
+    this.currentDirection = 'clockwise';
+    
+    // Determine first player based on top card
+    let firstPlayer = (this._dealer + 1) % this.players.length;
+    
+    if (topCard.type === 'REVERSE') {
+      this.currentDirection = 'counterclockwise';
+      firstPlayer = this._dealer === 0 ? this.players.length - 1 : this._dealer - 1;
+    } else if (topCard.type === 'SKIP') {
+      firstPlayer = (this._dealer + 2) % this.players.length;
+    } else if (topCard.type === 'DRAW CARD') {
+      const targetPlayer = (this._dealer + 1) % this.players.length;
+      this.drawCardsForPlayer(targetPlayer, 2);
+      firstPlayer = (this._dealer + 2) % this.players.length;
     }
+    
+    this._playerInTurn = firstPlayer;
+  }
 
-    playerInTurn(): number | undefined {
-        return this.ended ? undefined : this.currentPlayerIndex
+  get playerCount(): number {
+    return this.players.length;
+  }
+
+  get dealer(): number {
+    return this._dealer;
+  }
+
+  player(index: number): string {
+    if (index < 0 || index >= this.players.length) {
+      throw new Error('Player index out of bounds');
     }
+    return this.players[index];
+  }
 
-    getTopCard(): CardTypes | undefined {
-        return this.deck.discardPile.at(-1)
+  playerHand(index: number): readonly Card[] {
+    return this.hands[index];
+  }
+
+  playerInTurn(): number | undefined {
+    return this._playerInTurn;
+  }
+
+  drawPile(): Deck {
+    return this._drawPile;
+  }
+
+  discardPile(): Deck {
+    return this._discardPile;
+  }
+
+  canPlay(cardIndex: number): boolean {
+    if (cardIndex < 0 || this._playerInTurn === undefined) return false;
+    const hand = this.hands[this._playerInTurn];
+    if (cardIndex >= hand.length) return false;
+    
+    const card = hand[cardIndex];
+    
+    // Wild card can always be played
+    if (card.type === 'WILD CARD') return true;
+    
+    // Wild Draw 4: can only play if no matching color in hand
+    if (card.type === 'WILD DRAW') {
+      return !hand.some(c => 'color' in c && c.color === this.currentColor);
     }
-
-    advancePlayer(): void {
-        this.currentPlayerIndex =
-            (this.currentPlayerIndex + this.direction + this.players.length) % this.players.length
-        this.turnFrozen = false
+    
+    // Colored cards
+    if ('color' in card) {
+      if (card.color === this.currentColor) return true;
+      
+      const topCard = this._discardPile.top();
+      if (card.type === 'NUMBERED' && topCard.type === 'NUMBERED' && card.number === topCard.number) {
+        return true;
+      }
+      
+      if (card.type === topCard.type && card.type !== 'NUMBERED') {
+        return true;
+      }
     }
+    
+    return false;
+  }
 
-    play(index: number, chosenColor?: string): void {
-        if (this.ended) throw new Error("Round has ended")
-        const current = this.currentPlayerIndex
-        this.checkPlayedCard(index, chosenColor)
-        this.lastAction = "play"
-        this.lastPlayedBy = current
-        this.turnFrozen = true
+  canPlayAny(): boolean {
+    if (this._playerInTurn === undefined) return false;
+    const hand = this.hands[this._playerInTurn];
+    return hand.some((_, i) => this.canPlay(i));
+  }
 
-        const player = this.unoPlayers[current]
-        if (player.getHandSize() === 0) {
-            this.ended = true
-            this.winnerIndex = current
-            this.endCallbacks.forEach(cb => cb({ winner: this.winnerIndex! }))
-            return
-        }
-        this.advancePlayer()
+  play(cardIndex: number, chosenColor?: Color): Card {
+    if (this.ended) throw new Error('Round has ended');
+    if (this._playerInTurn === undefined) throw new Error('No player in turn');
+    if (!this.canPlay(cardIndex)) throw new Error('Illegal play');
+    
+    const hand = this.hands[this._playerInTurn];
+    const card = hand[cardIndex];
+    
+    // Validate color choice
+    if (card.type === 'WILD CARD' || card.type === 'WILD DRAW') {
+      if (!chosenColor) throw new Error('Must choose a color for wild card');
+    } else {
+      if (chosenColor) throw new Error('Cannot choose color for non-wild card');
     }
-
-    checkPlayedCard(cardIndex: number, chosenColor?: string): void {
-        const player = this.unoPlayers[this.currentPlayerIndex]
-        const card = player.playCard(cardIndex)
-        if (!card) return
-
-        this.deck.discardPile.unshift(card)
-
-        switch (card.type) {
-            case "REVERSE":
-                this.direction *= -1
-                if (this.players.length === 2) this.advancePlayer()
-                this.activeColor = card.color
-                break
-            case "SKIP":
-                this.advancePlayer()
-                this.activeColor = card.color
-                break
-            case "DRAW CARD":
-                this.advancePlayer()
-                this.unoPlayers[this.currentPlayerIndex].takeCard(this.deck.drawFromDeck()!)
-                this.unoPlayers[this.currentPlayerIndex].takeCard(this.deck.drawFromDeck()!)
-                this.activeColor = card.color
-                break
-            case "WILD CARD":
-                if (!chosenColor) throw new Error("Must choose a color for Wild")
-                this.activeColor = chosenColor
-                break
-            case "WILD DRAW":
-                if (!chosenColor) throw new Error("Must choose a color for Wild Draw Four")
-                this.activeColor = chosenColor
-                this.advancePlayer()
-                for (let i = 0; i < 4; i++) {
-                    this.unoPlayers[this.currentPlayerIndex].takeCard(this.deck.drawFromDeck()!)
-                }
-                break
-            case "NUMBERED":
-                this.activeColor = card.color
-                break
-        }
+    
+    // Remove card from hand
+    hand.splice(cardIndex, 1);
+    
+    // Add to discard pile
+    const discardMem = this._discardPile.toMemento();
+    discardMem.unshift({ ...card });
+    this._discardPile = Deck.fromMemento(discardMem);
+    
+    // Update current color
+    if (chosenColor) {
+      this.currentColor = chosenColor;
+    } else if ('color' in card) {
+      this.currentColor = card.color;
     }
-
-    canPlay(index: number): boolean {
-        if (this.ended) return false
-        const hand = this.unoPlayers[this.currentPlayerIndex].showHand()
-        if (index < 0 || index >= hand.length) return false
-        const card = hand[index]
-        const top = this.getTopCard()
-        if (!top) return false
-
-        if (card.type === "WILD CARD") return true
-        if (card.type === "WILD DRAW") {
-            if (this.activeColor) {
-                const hasPlayableColor = hand.some(c => "color" in c && c.color === this.activeColor)
-                return !hasPlayableColor
-            }
-            return true
-        }
-
-        const currentColor = this.activeColor || ("color" in top ? top.color : undefined)
-        if ("color" in card && card.color === currentColor) return true
-        if (card.type === "NUMBERED" && top.type === "NUMBERED" && card.number === top.number) return true
-        if (card.type === top.type && card.type !== "NUMBERED") return true
-        return false
+    
+    this.lastPlayedPlayer = this._playerInTurn;
+    this.unoSaid.delete(this._playerInTurn);
+    
+    // Check if player won
+    if (hand.length === 0) {
+      this.ended = true;
+      this._playerInTurn = undefined;
+      this.endCallbacks.forEach(cb => cb({ winner: this.lastPlayedPlayer! }));
+      return card;
     }
-
-    sayUno(index: number): void {
-        if (index < 0 || index >= this.unoPlayers.length) throw new Error("Invalid player index")
-        if (this.ended) throw new Error("Round has ended")
-        this.unoCalls.add(index)
+    
+    // Handle special cards
+    let nextPlayer = this.getNextPlayer(this._playerInTurn);
+    
+    if (card.type === 'SKIP') {
+      nextPlayer = this.getNextPlayer(nextPlayer);
+    } else if (card.type === 'REVERSE') {
+      if (this.players.length === 2) {
+        nextPlayer = this._playerInTurn;
+      } else {
+        this.currentDirection = this.currentDirection === 'clockwise' ? 'counterclockwise' : 'clockwise';
+        nextPlayer = this.getNextPlayer(this._playerInTurn);
+      }
+    } else if (card.type === 'DRAW CARD') {
+      this.drawCardsForPlayer(nextPlayer, 2);
+      nextPlayer = this.getNextPlayer(nextPlayer);
+    } else if (card.type === 'WILD DRAW') {
+      this.drawCardsForPlayer(nextPlayer, 4);
+      nextPlayer = this.getNextPlayer(nextPlayer);
     }
+    
+    this._playerInTurn = nextPlayer;
+    return card;
+  }
 
-    catchUnoFailure({ accuser, accused }: { accuser: number; accused: number }): boolean {
-        if (accused < 0 || accused >= this.unoPlayers.length) throw new Error("Invalid accused index")
-        if (this.ended) return false
-        if (this.accusedAlready.has(accused)) return false
-
-        const accusedPlayer = this.unoPlayers[accused]
-        if (accusedPlayer.getHandSize() !== 1) return false
-        if (!this.turnFrozen) return false
-        if (this.lastPlayedBy !== accused) return false
-        if (this.unoCalls.has(accused)) return false
-
-        for (let i = 0; i < 4; i++) {
-            if (this.deck.cards.length === 0) {
-                const top = this.deck.discardPile.shift()
-                this.deck.cards = this.deck.discardPile
-                this.deck.discardPile = top ? [top] : []
-                this.deck.shuffle(this.shuffler)
-            }
-            const c = this.deck.drawFromDeck()
-            if (c) accusedPlayer.takeCard(c)
-        }
-
-        this.accusedAlready.add(accused)
-        return true
+  draw(): void {
+    if (this.ended) throw new Error('Round has ended');
+    if (this._playerInTurn === undefined) throw new Error('No player in turn');
+    
+    const card = this.drawCard();
+    if (card) {
+      this.hands[this._playerInTurn].push(card);
+      
+      const cardIndex = this.hands[this._playerInTurn].length - 1;
+      if (!this.canPlay(cardIndex)) {
+        this._playerInTurn = this.getNextPlayer(this._playerInTurn);
+      }
     }
+  }
 
-    toMemento(): RoundMemento {
-        return {
-            players: this.players,
-            hands: this.unoPlayers.map(p => p.showHand()),
-            drawPile: [...this.deck.cards],
-            discardPile: [...this.deck.discardPile],
-            currentColor: this.activeColor ?? "",
-            currentDirection: this.direction === 1 ? "clockwise" : "counterclockwise",
-            dealer: this.dealer,
-            playerInTurn: this.ended ? -1 : this.currentPlayerIndex
-        }
+  sayUno(playerIndex: number): void {
+    if (this.ended) throw new Error('Round has ended');
+    if (playerIndex < 0 || playerIndex >= this.players.length) {
+      throw new Error('Player index out of bounds');
     }
+    this.unoSaid.add(playerIndex);
+  }
 
-    static fromMemento(m: RoundMemento, shuffler?: any): Round {
-        if (!m.players || m.players.length < 2) throw new Error("Invalid memento: less than 2 players")
-        if (m.hands.length !== m.players.length) throw new Error("Invalid memento: hands length mismatch")
-        if (m.discardPile.length === 0) throw new Error("Invalid memento: empty discard pile")
+  catchUnoFailure(params: { accuser: number; accused: number }): boolean {
+    if (params.accused < 0 || params.accused >= this.players.length) {
+      throw new Error('Accused player index out of bounds');
+    }
+    
+    if (this.lastPlayedPlayer !== params.accused) return false;
+    if (this.hands[params.accused].length !== 1) return false;
+    
+    if (this._playerInTurn !== this.getNextPlayer(params.accused)) return false;
+    
+    if (this.unoSaid.has(params.accused)) return false;
+    
+    this.drawCardsForPlayer(params.accused, 4);
+    return true;
+  }
 
-        const emptyHands = m.hands.map(h => h.length === 0)
-        const emptyCount = emptyHands.filter(Boolean).length
-        if (emptyCount > 1) throw new Error("Invalid memento: multiple winners")
-        const isFinished = emptyCount === 1
+  hasEnded(): boolean {
+    return this.ended;
+  }
 
-        if (m.dealer < 0 || m.dealer >= m.players.length) throw new Error("Invalid memento: invalid dealer index")
+  winner(): number | undefined {
+    if (!this.ended) return undefined;
+    return this.lastPlayedPlayer;
+  }
 
-        if (!isFinished) {
-            if (m.playerInTurn === undefined) throw new Error("Invalid memento: missing playerInTurn")
-            if (m.playerInTurn < 0 || m.playerInTurn >= m.players.length)
-                throw new Error("Invalid memento: invalid playerInTurn index")
-        }
-
-        const COLORS = new Set(["RED", "GREEN", "BLUE", "YELLOW"])
-        if (!COLORS.has(m.currentColor)) throw new Error("Invalid memento: invalid currentColor")
-
-        const topOfDiscard = m.discardPile[0]
-        if ("color" in topOfDiscard && topOfDiscard.color && topOfDiscard.color !== m.currentColor) {
-            throw new Error("Invalid memento: inconsistent currentColor with discard pile")
-        }
-
-        const round = new Round(m.players, m.dealer, shuffler, m.hands[0]?.length ?? 7)
-
-        round.unoPlayers.forEach((p, i) => {
-            for (const c of m.hands[i]) p.takeCard(normalizeCard(c))
-        })
-
-        round.deck.cards = m.drawPile.map(normalizeCard)
-        round.deck.discardPile = m.discardPile.map(normalizeCard)
-        round.direction = m.currentDirection === "clockwise" ? 1 : -1
-        round.activeColor = m.currentColor
-
-        if (isFinished) {
-            round.ended = true
-            round.winnerIndex = emptyHands.findIndex(Boolean)
-            round.currentPlayerIndex = -1 as unknown as number
+  score(): number | undefined {
+    if (!this.ended) return undefined;
+    
+    let total = 0;
+    for (let i = 0; i < this.players.length; i++) {
+      if (i === this.lastPlayedPlayer) continue;
+      for (const card of this.hands[i]) {
+        if (card.type === 'NUMBERED') {
+          total += card.number;
+        } else if (card.type === 'WILD CARD' || card.type === 'WILD DRAW') {
+          total += 50;
         } else {
-            round.currentPlayerIndex = m.playerInTurn!
+          total += 20;
         }
-
-        return round
+      }
     }
+    return total;
+  }
 
-    hasEnded(): boolean {
-        return this.ended
+  onEnd(callback: (event: { winner: number }) => void): void {
+    this.endCallbacks.push(callback);
+  }
+
+  toMemento(): RoundMemento {
+    return {
+      players: this.players,
+      hands: this.hands.map(hand => hand.map(card => ({ ...card }))),
+      drawPile: this._drawPile.toMemento(),
+      discardPile: this._discardPile.toMemento(),
+      currentColor: this.currentColor,
+      currentDirection: this.currentDirection,
+      dealer: this._dealer,
+      playerInTurn: this._playerInTurn
+    };
+  }
+
+  static fromMemento(memento: RoundMemento, shuffler: Shuffler<Card> = standardShuffler): Round {
+    if (memento.players.length < 2) throw new Error('At least 2 players required');
+    if (memento.players.length !== memento.hands.length) throw new Error('Mismatched players and hands');
+    if (memento.discardPile.length === 0) throw new Error('Empty discard pile');
+    if (memento.dealer < 0 || memento.dealer >= memento.players.length) throw new Error('Invalid dealer');
+    
+    const emptyHands = memento.hands.filter(h => h.length === 0).length;
+    if (emptyHands > 1) throw new Error('Multiple winners');
+    if (emptyHands === 0 && memento.playerInTurn === undefined) throw new Error('Missing playerInTurn');
+    if (memento.playerInTurn !== undefined && (memento.playerInTurn < 0 || memento.playerInTurn >= memento.players.length)) {
+      throw new Error('Invalid playerInTurn');
     }
-
-    winner(): number | undefined {
-        return this.winnerIndex
+    
+    if (!colors.includes(memento.currentColor as Color)) throw new Error('Invalid currentColor');
+    
+    const topCard = memento.discardPile[0];
+    if ('color' in topCard && topCard.color !== memento.currentColor) {
+      if (topCard.type !== 'WILD CARD' && topCard.type !== 'WILD DRAW' && topCard.type !== 'WILD') {
+        throw new Error('Inconsistent currentColor');
+      }
     }
+    
+    const round = Object.create(Round.prototype);
+    round.players = memento.players;
+    round.hands = memento.hands.map(hand => 
+      hand.map(c => Deck.fromMemento([c]).deal()!)
+    );
+    round._drawPile = Deck.fromMemento(memento.drawPile);
+    round._discardPile = Deck.fromMemento(memento.discardPile);
+    round.currentColor = memento.currentColor as Color;
+    round.currentDirection = memento.currentDirection;
+    round._dealer = memento.dealer;
+    round._playerInTurn = memento.playerInTurn;
+    round.shuffler = shuffler;
+    round.unoSaid = new Set();
+    round.ended = emptyHands === 1;
+    round.endCallbacks = [];
+    round.lastPlayedPlayer = emptyHands === 1 ? memento.hands.findIndex(h => h.length === 0) : undefined;
+    
+    return round;
+  }
 
-    draw(): void {
-        if (this.ended) throw new Error("Round has ended")
-        const card = this.deck.drawFromDeck()
-        if (!card) throw new Error("No cards left to draw")
-        this.unoPlayers[this.currentPlayerIndex].takeCard(card)
-        this.lastAction = "draw"
-        this.advancePlayer()
+  private getNextPlayer(current: number): number {
+    if (this.currentDirection === 'clockwise') {
+      return (current + 1) % this.players.length;
+    } else {
+      return current === 0 ? this.players.length - 1 : current - 1;
     }
+  }
 
-    score(): number | undefined {
-        if (!this.ended || this.winnerIndex === undefined) return undefined
-        let total = 0
-        this.unoPlayers.forEach((p, i) => {
-            if (i === this.winnerIndex) return
-            for (const card of p.showHand()) {
-                switch (card.type) {
-                    case "NUMBERED": total += card.number; break
-                    case "SKIP":
-                    case "REVERSE":
-                    case "DRAW CARD": total += 20; break
-                    case "WILD CARD":
-                    case "WILD DRAW": total += 50; break
-                }
-            }
-        })
-        return total
+  private drawCard(): Card | undefined {
+    let card = this._drawPile.deal();
+    
+    if (!card && this._discardPile.size > 1) {
+      const discardMem = this._discardPile.toMemento();
+      const topCard = discardMem.shift()!;
+      this._drawPile = Deck.fromMemento(discardMem);
+      this._drawPile.shuffle(this.shuffler);
+      this._discardPile = Deck.fromMemento([topCard]);
+      card = this._drawPile.deal();
     }
+    
+    return card;
+  }
 
-    canPlayAny(): boolean {
-        if (this.ended) return false
-        return this.unoPlayers[this.currentPlayerIndex].getHandSize() > 0
+  private drawCardsForPlayer(playerIndex: number, count: number): void {
+    for (let i = 0; i < count; i++) {
+      const card = this.drawCard();
+      if (card) {
+        this.hands[playerIndex].push(card);
+      }
     }
-
-    onEnd(callback: (e: { winner: number }) => void): void {
-        this.endCallbacks.push(callback)
-    }
-
+  }
 }

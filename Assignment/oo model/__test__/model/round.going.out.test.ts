@@ -118,7 +118,7 @@ describe('catching failure to say "UNO!"', () => {
       ],
       drawPile: [
         { type: 'NUMBERED', color: 'BLUE', number: 0 },
-        { type: 'DRAW', color: 'RED' },
+        { type: 'DRAW CARD', color: 'RED' },
         { type: 'NUMBERED', color: 'RED', number: 5 }],
       discardPile: [{ type: 'NUMBERED', color: 'BLUE', number: 3 }, { type: 'NUMBERED', color: 'BLUE', number: 8 }, { type: 'NUMBERED', color: 'RED', number: 8 }],
       currentColor: 'BLUE',

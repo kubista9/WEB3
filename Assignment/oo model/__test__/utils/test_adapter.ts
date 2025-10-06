@@ -1,8 +1,9 @@
-import { Randomizer, Shuffler, standardRandomizer, standardShuffler } from '../../src/utils/random_utils'
+import { Randomizer, Shuffler } from '../../src/utils/random_utils'
 import { Deck } from '../../src/model/deck'
-import { CardTypes } from '../../src/model/interfaces'
+import { CardTypes, GameMemento, RoundMemento } from '../../src/model/interfaces'
 import { Round } from '../../src/model/round'
 import { Game } from '../../src/model/game'
+import { standardRandomizer, standardShuffler } from '../../src/utils/random_utils'
 
 export function createInitialDeck(): Deck {
   const deck = new Deck()
@@ -27,30 +28,37 @@ export function createRound({
   shuffler = standardShuffler,
   cardsPerPlayer = 7
 }: HandConfig): Round {
-  const round = new Round(players, dealer, shuffler, cardsPerPlayer)
-  return round
+  return new Round(players, dealer, shuffler, cardsPerPlayer)
 }
 
-export function createRoundFromMemento(memento: any, shuffler: Shuffler<CardTypes> = standardShuffler): Round {
+export function createRoundFromMemento(
+  memento: RoundMemento, 
+  shuffler: Shuffler<CardTypes> = standardShuffler
+): Round {
   return Round.fromMemento(memento, shuffler)
 }
 
 export type GameConfig = {
-  players: string[]
-  targetScore: number
-  randomizer: Randomizer
-  shuffler: Shuffler<CardTypes>
-  cardsPerPlayer: number
+  players?: string[]
+  targetScore?: number
+  randomizer?: Randomizer
+  shuffler?: Shuffler<CardTypes>
+  cardsPerPlayer?: number
 }
 
-export function createGame(props: Partial<GameConfig>): Game {
-  const players = props.players ?? [];
-  const targetScore = props.targetScore ?? 0;
-  const game = new Game(players, targetScore);
-  return game;
+export function createGame(props: GameConfig = {}): Game {
+  const players = props.players ?? ['A', 'B'];
+  const targetScore = props.targetScore ?? 500;
+  const shuffler = props.shuffler ?? standardShuffler;
+  const randomizer = props.randomizer ?? standardRandomizer;
+  const cardsPerPlayer = props.cardsPerPlayer ?? 7;
+  
+  return new Game(players, targetScore, shuffler, randomizer, cardsPerPlayer);
 }
 
-export function createGameFromMemento(memento: any, randomizer: Randomizer = standardRandomizer, shuffler: Shuffler<CardTypes> = standardShuffler): Game {
-  return Game.fromMemento(memento)
+export function createGameFromMemento(
+  memento: GameMemento, 
+  shuffler: Shuffler<CardTypes> = standardShuffler
+): Game {
+  return Game.fromMemento(memento, shuffler, standardRandomizer)
 }
-
