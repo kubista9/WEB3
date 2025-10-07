@@ -1,5 +1,4 @@
 import { Card, Color, colors, CardTypes } from './interfaces';
-
 export { Card, Color, CardTypes };
 
 export function hasColor(card: Card, color: Color): boolean {
@@ -95,11 +94,11 @@ export class Deck {
         if (!('color' in cardData)) throw new Error('Invalid reverse card');
         return { type: 'REVERSE', color: cardData.color as Color };
       }
-      if (type === 'DRAW CARD' || type === 'DRAW') {
+      if (type === 'DRAW CARD') {
         if (!('color' in cardData)) throw new Error('Invalid draw card');
         return { type: 'DRAW CARD', color: cardData.color as Color };
       }
-      if (type === 'WILD CARD' || type === 'WILD') {
+      if (type === 'WILD CARD') {
         return { type: 'WILD CARD' };
       }
       if (type === 'WILD DRAW') {

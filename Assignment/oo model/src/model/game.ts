@@ -109,7 +109,7 @@ export class Game {
     return game;
   }
 
-  private startNewRound(): void {
+  startNewRound(): void {
     const randomValue = this.randomizer(4);
     const dealer = Math.floor(randomValue * this.players.length);
     this._currentRound = new Round(

@@ -1,12 +1,12 @@
 export const colors = ['BLUE', 'GREEN', 'RED', 'YELLOW'] as const;
 export type Color = typeof colors[number];
 
-export type Type = 
-  | 'NUMBERED' 
-  | 'SKIP' 
-  | 'REVERSE' 
-  | 'DRAW CARD' 
-  | 'WILD CARD' 
+export type Type =
+  | 'NUMBERED'
+  | 'SKIP'
+  | 'REVERSE'
+  | 'DRAW CARD'
+  | 'WILD CARD'
   | 'WILD DRAW';
 
 export type NumberedCard = {
@@ -41,10 +41,9 @@ export type WildDrawCard = {
 export type ColoredCard = NumberedCard | SkipCard | ReverseCard | DrawCard;
 export type WildCards = WildCard | WildDrawCard;
 export type Card = ColoredCard | WildCards;
-
 export type CardTypes = Card;
 
-export type TypedCard<T extends Type> = 
+export type TypedCard<T extends Type> =
   T extends 'NUMBERED' ? NumberedCard :
   T extends 'SKIP' ? SkipCard :
   T extends 'REVERSE' ? ReverseCard :

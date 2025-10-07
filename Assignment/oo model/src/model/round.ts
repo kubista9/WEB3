@@ -181,7 +181,6 @@ export class Round {
     }
 
     this.lastPlayedPlayer = this._playerInTurn;
-    // Don't delete UNO said status here - it should persist until caught or new card played
 
     // Check if player won
     if (hand.length === 0) {
@@ -343,7 +342,7 @@ export class Round {
     return round;
   }
 
-  private getNextPlayer(current: number): number {
+  getNextPlayer(current: number): number {
     if (this.currentDirection === 'clockwise') {
       return (current + 1) % this.players.length;
     } else {
@@ -351,7 +350,7 @@ export class Round {
     }
   }
 
-  private drawCard(): Card | undefined {
+  drawCard(): Card | undefined {
     let card = this._drawPile.deal();
 
     if (!card && this._discardPile.size > 1) {
@@ -370,7 +369,7 @@ export class Round {
     return card;
   }
 
-  private drawCardsForPlayer(playerIndex: number, count: number): void {
+  drawCardsForPlayer(playerIndex: number, count: number): void {
     for (let i = 0; i < count; i++) {
       const card = this.drawCard();
       if (card) {
