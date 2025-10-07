@@ -74,13 +74,11 @@ export class Game {
     if (memento.targetScore <= 0) throw new Error('Target score must be positive');
     if (memento.scores.some(s => s < 0)) throw new Error('Negative scores not allowed');
     if (memento.scores.length !== memento.players.length) throw new Error('Mismatched scores and players');
-
     const winners = memento.scores.filter(s => s >= memento.targetScore).length;
     if (winners > 1) throw new Error('Multiple winners');
-
     if (winners === 0 && !memento.currentRound) throw new Error('Missing currentRound in unfinished game');
 
-    const game = Object.create(Game.prototype);
+    const game = Object.create(Game.prototype); // const game = new Game(players, targetScore, shuffler, randomizer, cardsPerPlayer); <- kind of less advanced
     game.players = memento.players;
     game._targetScore = memento.targetScore;
     game.scores = [...memento.scores];
@@ -89,9 +87,9 @@ export class Game {
     game.randomizer = randomizer;
     game._winner = winners === 1 ? memento.scores.findIndex(s => s >= memento.targetScore) : undefined;
 
-    if (memento.currentRound) {
+    if (memento.currentRound) { // not in the middle of the round when it was saved
       game._currentRound = Round.fromMemento(memento.currentRound, game.shuffler);
-      game._currentRound.onEnd((event: { winner: number }) => {
+      game._currentRound.onEnd((event: { winner: number }) => { //   when round finishes
         const roundScore = game._currentRound!.score()!;
         game.scores[event.winner] += roundScore;
 
