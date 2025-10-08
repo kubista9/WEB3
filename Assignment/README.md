@@ -15,6 +15,8 @@
 
   npm run dev
 
+  docker run -d -p 27017:27017 --name mongodb mongo:latest
+
 # UNO Game Implementation 🎮
 
 This project is an object-oriented TypeScript implementation of the classic UNO card game.  
