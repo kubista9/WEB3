@@ -1,5 +1,4 @@
 import { Card, Color, colors, CardTypes } from './interfaces';
-export { Card, Color, CardTypes };
 
 export function hasColor(card: Card, color: Color): boolean {
   return 'color' in card && card.color === color;
