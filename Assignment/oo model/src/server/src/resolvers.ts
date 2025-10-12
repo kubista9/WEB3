@@ -17,7 +17,6 @@ interface Context {
   pubsub: PubSub;
 }
 
-// Store active games in memory (Game class instances)
 const activeGamesMap = new Map<string, Game>();
 
 // Helper functions
