@@ -11,7 +11,7 @@ import { resolvers } from './resolvers';
 import { PubSub } from 'graphql-subscriptions';
 import 'dotenv/config';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default'
-
+import jwt from 'jsonwebtoken'
 
 const PORT = 4000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/uno-game';
@@ -70,7 +70,32 @@ async function startServer() {
   );
 
   console.log(`🚀 Server running at http://localhost:${PORT}/graphql`);
+
+  app.use(
+    '/graphql',
+    cors({
+      origin: 'http://localhost:5173',
+      credentials: true,
+    }),
+    express.json(),
+    expressMiddleware(server, {
+      context: async ({ req }) => {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        let userId: string | null = null;
+
+        if (token) {
+          try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretkey') as any;
+            userId = decoded.username;
+          } catch (err) {
+            console.error('Invalid token:', err);
+          }
+        }
+
+        return { userId, pubsub };
+      },
+    })
+  );
+
+  startServer().catch(console.error);
 }
-
-startServer().catch(console.error);
-

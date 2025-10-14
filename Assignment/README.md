@@ -27,6 +27,15 @@ or
   docker run -d -p 27017:27017 --name mongodb mongo:latest
 
 ### For apollo server
+  mutation {
+  register(username: "jakub", password: "123456") {
+    token
+    user {
+      id
+      username
+      }
+    }
+  }
 
   mutation {
   login(username: "jakub", password: "123456") {
@@ -38,12 +47,22 @@ or
   }
 }
 
-mutation {
-  register(username: "jakub", password: "123456") {
-    token
-    user {
-      id
+mutation CreateGame($input: CreateGameInput!) {
+  createGame(input: $input) {
+    id
+    creatorId
+    creatorUsername
+    players {
       username
     }
+    maxPlayers
+    createdAt
   }
 }
+{
+  "input": {
+    "maxPlayers": 4
+  }
+}
+
+header type: authorization + token from login

@@ -97,7 +97,6 @@ export const typeDefs = gql`
 
   input CreateGameInput {
     maxPlayers: Int!
-    username: String!
   }
 
   input CatchUnoInput {

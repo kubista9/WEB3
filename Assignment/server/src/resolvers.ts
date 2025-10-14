@@ -205,15 +205,15 @@ export const resolvers = {
 
     async createGame(
       _: any,
-      { input }: { input: { maxPlayers: number; username: string } },
-      { pubsub }: Context
+      { input }: { input: { maxPlayers: number } },
+      { userId, pubsub }: Context
     ) {
-      const player = await getOrCreatePlayer(input.username);
+      const username = validateContext(userId);
 
       const game = await PendingGame.create({
-        creatorId: player._id,
-        creatorUsername: player.username,
-        players: [{ _id: player._id, username: player.username }],
+        creatorId: username,
+        creatorUsername: username,
+        players: [{ username }],
         maxPlayers: input.maxPlayers,
       });
 
@@ -256,7 +256,6 @@ export const resolvers = {
       }
 
       game.players.push({
-        _id: player._id as any,
         username: player.username,
       });
 
