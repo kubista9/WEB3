@@ -4,6 +4,10 @@
 
 ## Commands
 
+http://localhost:4000/graphql
+
+http://localhost:5173/
+
 ### General
   npm install
 
