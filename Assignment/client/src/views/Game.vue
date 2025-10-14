@@ -13,156 +13,293 @@
 
     <!-- Game Header -->
     <div class="game-header">
-      <div class="player-info">
-        <span class="label">Current Player:</span>
-        <span class="value">{{ currentPlayerName }}</span>
-      </div>
-      <div class="score-info">
-        <span class="label">Round Score:</span>
-        <span class="value">{{ roundScore }}</span>
+      <h1>UNO Game</h1>
+      <div class="header-info">
+        <div>
+          <span class="label">Current Player:</span>
+          <span class="value">{{ currentPlayerName }}</span>
+        </div>
+        <div>
+          <span class="label">Your Cards:</span>
+          <span class="value">{{ myHand.length }}</span>
+        </div>
       </div>
       <button @click="leaveGame" class="btn-danger">Leave Game</button>
     </div>
 
     <!-- Other Players -->
     <div class="other-players">
-      <PlayerInfo
-        v-for="(player, index) in otherPlayers"
+      <div 
+        v-for="(player, index) in otherPlayers" 
         :key="index"
-        :player-name="player"
-        :card-count="getPlayerCardCount(index)"
-        :is-current="isCurrentPlayer(index)"
-        @catch-uno="handleCatchUno(index)"
-      />
+        class="player-card"
+        :class="{ current: isCurrentPlayer(index) }"
+      >
+        <div class="player-name">{{ player }}</div>
+        <div class="card-count">🃏 {{ getPlayerCardCount(index) }}</div>
+      </div>
     </div>
 
     <!-- Game Board -->
     <div class="game-board">
       <!-- Draw Pile -->
-      <div class="draw-pile" @click="handleDrawCard">
-        <div class="card-back">
-          <span class="deck-count">{{ drawPileCount }}</span>
+      <div class="pile">
+        <div class="card-back" @click="handleDrawCard">
+          <span class="pile-label">Draw</span>
+          <span class="card-count">{{ drawPileCount }}</span>
         </div>
       </div>
 
       <!-- Discard Pile -->
-      <DiscardPile :top-card="topCard" />
+      <div class="pile">
+        <div v-if="topCard" class="card" :class="{ [topCard.color]: true }">
+          <div class="card-type">{{ topCard.type }}</div>
+          <div v-if="topCard.number" class="card-number">{{ topCard.number }}</div>
+        </div>
+        <div v-else class="empty-pile">No cards</div>
+      </div>
     </div>
 
     <!-- Player Hand -->
     <div class="player-hand-section">
       <h3>Your Hand</h3>
-      <PlayerHand
-        :cards="myHand"
-        :selected-index="selectedCardIndex"
-        :can-play-card="canPlayCard"
-        :is-my-turn="isMyTurn"
-        @select-card="selectCard"
-      />
+      <div class="player-hand">
+        <div
+          v-for="(card, index) in myHand"
+          :key="index"
+          class="card-wrapper"
+          :class="{ selected: selectedCardIndex === index }"
+          @click="selectCard(index)"
+        >
+          <div class="card" :class="{ [card.color]: true }">
+            <div class="card-type">{{ card.type }}</div>
+            <div v-if="card.number" class="card-number">{{ card.number }}</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Game Controls -->
-    <GameControls
-      :is-my-turn="isMyTurn"
-      :can-say-uno="canSayUno"
-      :selected-card-index="selectedCardIndex"
-      :show-color-picker="showColorPicker"
-      @play-card="handlePlayCardAction"
-      @draw-card="handleDrawCard"
-      @say-uno="handleSayUno"
-    />
+    <div class="game-controls">
+      <button
+        @click="handlePlayCard"
+        :disabled="!isMyTurn || selectedCardIndex === null"
+        class="btn btn-play"
+      >
+        Play Card
+      </button>
+      <button
+        @click="handleDrawCard"
+        :disabled="!isMyTurn"
+        class="btn btn-draw"
+      >
+        Draw Card
+      </button>
+      <button
+        @click="handleSayUno"
+        :disabled="!canSayUno"
+        class="btn btn-uno"
+      >
+        UNO!
+      </button>
+    </div>
 
     <!-- Color Picker Modal -->
-    <ColorPicker
-      v-if="showColorPicker"
-      @select-color="handleColorSelection"
-      @close="showColorPicker = false"
-    />
+    <div v-if="showColorPicker" class="color-picker-overlay" @click.self="showColorPicker = false">
+      <div class="color-picker">
+        <h3>Choose a Color</h3>
+        <div class="colors">
+          <button
+            v-for="color in ['RED', 'BLUE', 'GREEN', 'YELLOW']"
+            :key="color"
+            class="color-button"
+            :class="{ [color]: true }"
+            @click="handleColorSelection(color)"
+          >
+            {{ color }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useGame } from '@/composables/useGame'
-import { useGameSubscription } from '@/composables/useWebSocket'
 import { useGameStore } from '@/stores/game'
-import PlayerInfo from '@/components/PlayerInfo.vue'
-import DiscardPile from '@/components/DiscardPile.vue'
-import PlayerHand from '@/components/PlayerHand.vue'
-import GameControls from '@/components/GameControls.vue'
-import ColorPicker from '@/components/ColorPicker.vue'
-import { Color } from '../../../model/interfaces'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const gameStore = useGameStore()
+const authStore = useAuthStore()
 const gameId = route.params.id as string
 
-// Setup game subscription (Observer pattern)
-useGameSubscription(gameId)
-
-// Use game composable (MVVM ViewModel)
-const {
-  myHand,
-  topCard,
-  isMyTurn,
-  canSayUno,
-  notifications,
-  players,
-  currentPlayerId,
-  selectedCardIndex,
-  showColorPicker,
-  handlePlayCard,
-  handleDrawCard,
-  handleSayUno,
-  handleCatchUno,
-  canPlayCard,
-  selectCard
-} = useGame()
+const selectedCardIndex = ref<number | null>(null)
+const notifications = ref<string[]>([])
+const showColorPicker = ref(false)
+const pendingCardIndex = ref<number | null>(null)
 
 // Computed properties
-const currentPlayerName = computed(() => {
-  const turnIndex = gameStore.currentRound?.playerInTurn()
-  return turnIndex !== undefined ? players.value[turnIndex] : ''
+const myHand = computed(() => {
+  const game = gameStore.game
+  if (!game) return []
+  const round = game.currentRound?.()
+  if (!round) return []
+  // Find the player index for the current user
+  const username = authStore.user?.username
+  let playerIndex = 0
+  for (let i = 0; i < round.playerCount; i++) {
+    if (round.player(i) === username) {
+      playerIndex = i
+      break
+    }
+  }
+  return round.playerHand(playerIndex) || []
 })
 
-const roundScore = computed(() => {
-  return gameStore.currentRound?.score() ?? 0
+const topCard = computed(() => {
+  const game = gameStore.game
+  if (!game) return null
+  const round = game.currentRound?.()
+  if (!round) return null
+  return round.discardPile?.()?.peek?.() || null
+})
+
+const isMyTurn = computed(() => {
+  const game = gameStore.game
+  if (!game) return false
+  const round = game.currentRound?.()
+  if (!round) return false
+  const username = authStore.user?.username
+  let playerIndex = 0
+  for (let i = 0; i < round.playerCount; i++) {
+    if (round.player(i) === username) {
+      playerIndex = i
+      break
+    }
+  }
+  return round.playerInTurn?.() === playerIndex
+})
+
+const players = computed(() => {
+  const game = gameStore.game
+  if (!game) return []
+  const round = game.currentRound?.()
+  if (!round) return []
+  return Array.from({ length: round.playerCount }, (_, i) => round.player(i))
+})
+
+const currentPlayerName = computed(() => {
+  const game = gameStore.game
+  if (!game) return ''
+  const round = game.currentRound?.()
+  if (!round) return ''
+  const playerIndex = round.playerInTurn?.()
+  return playerIndex !== undefined ? round.player(playerIndex) : ''
 })
 
 const otherPlayers = computed(() => {
-  return players.value.filter((_, index) => index !== currentPlayerId.value)
+  const game = gameStore.game
+  if (!game) return []
+  const round = game.currentRound?.()
+  if (!round) return []
+  const myUsername = authStore.user?.username
+  return players.value.filter(p => p !== myUsername)
 })
 
 const drawPileCount = computed(() => {
-  return gameStore.currentRound?.drawPile().size ?? 0
+  const game = gameStore.game
+  if (!game) return 0
+  const round = game.currentRound?.()
+  if (!round) return 0
+  return round.drawPile?.()?.size || 0
 })
 
-function getPlayerCardCount(playerIndex: number) {
-  return gameStore.currentRound?.playerHand(playerIndex).length ?? 0
+const canSayUno = computed(() => {
+  return isMyTurn.value && myHand.value.length === 1
+})
+
+// Methods
+function selectCard(index: number) {
+  if (!isMyTurn.value) return
+  selectedCardIndex.value = index
 }
 
-function isCurrentPlayer(playerIndex: number) {
-  return gameStore.currentRound?.playerInTurn() === playerIndex
-}
-
-async function handlePlayCardAction() {
-  if (selectedCardIndex.value === null) return
+async function handlePlayCard() {
+  if (selectedCardIndex.value === null || !isMyTurn.value) return
   
   const card = myHand.value[selectedCardIndex.value]
   
-  if (card.type === 'WILD CARD' || card.type === 'WILD DRAW') {
-    gameStore.showColorPicker = true
+  // Check if it's a wild card that needs color selection
+  if (card.type === 'WILD CARD' || card.type === 'DRAW CARD') {
+    pendingCardIndex.value = selectedCardIndex.value
+    showColorPicker.value = true
   } else {
-    await handlePlayCard(selectedCardIndex.value)
+    await playCard(selectedCardIndex.value)
   }
 }
 
-async function handleColorSelection(color: Color) {
-  if (selectedCardIndex.value === null) return
-  await handlePlayCard(selectedCardIndex.value, color)
-  gameStore.showColorPicker = false
+async function handleColorSelection(color: string) {
+  if (pendingCardIndex.value === null) return
+  await playCard(pendingCardIndex.value, color)
+  showColorPicker.value = false
+  pendingCardIndex.value = null
+}
+
+async function playCard(cardIndex: number, color?: string) {
+  try {
+    // Call your game service to play the card
+    // await gameService.playCard(gameId, cardIndex, color)
+    addNotification('Card played!')
+    selectedCardIndex.value = null
+  } catch (error: any) {
+    addNotification('Failed to play card: ' + error.message)
+  }
+}
+
+async function handleDrawCard() {
+  if (!isMyTurn.value) return
+  try {
+    // await gameService.drawCard(gameId)
+    addNotification('Card drawn!')
+  } catch (error: any) {
+    addNotification('Failed to draw card: ' + error.message)
+  }
+}
+
+async function handleSayUno() {
+  if (!canSayUno.value) return
+  try {
+    // await gameService.sayUno(gameId)
+    addNotification('UNO!')
+  } catch (error: any) {
+    addNotification('Failed: ' + error.message)
+  }
+}
+
+function addNotification(message: string) {
+  notifications.value.push(message)
+  setTimeout(() => {
+    notifications.value.shift()
+  }, 3000)
+}
+
+function getPlayerCardCount(playerIndex: number) {
+  const game = gameStore.game
+  if (!game) return 0
+  const round = game.currentRound?.()
+  if (!round) return 0
+  return round.playerHand(playerIndex)?.length || 0
+}
+
+function isCurrentPlayer(playerIndex: number) {
+  const game = gameStore.game
+  if (!game) return false
+  const round = game.currentRound?.()
+  if (!round) return false
+  return round.playerInTurn?.() === playerIndex
 }
 
 function leaveGame() {
@@ -170,9 +307,9 @@ function leaveGame() {
 }
 
 onMounted(() => {
-  // Check if game ended
-  if (gameStore.currentRound?.hasEnded()) {
-    router.push('/game-over')
+  // Initialize or check game state
+  if (!gameStore.game) {
+    router.push('/lobby')
   }
 })
 </script>
@@ -198,21 +335,18 @@ onMounted(() => {
   margin-bottom: 0.5rem;
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
 }
 
-.notification-enter-active,
-.notification-leave-active {
-  transition: all 0.3s ease;
-}
-
-.notification-enter-from {
-  transform: translateX(100%);
-  opacity: 0;
-}
-
-.notification-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .game-header {
@@ -224,29 +358,61 @@ onMounted(() => {
   padding: 1.5rem;
   border-radius: 1rem;
   margin-bottom: 2rem;
+  color: white;
 }
 
-.player-info, .score-info {
+.game-header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.header-info {
   display: flex;
-  flex-direction: column;
-  color: white;
+  gap: 2rem;
 }
 
 .label {
   font-size: 0.875rem;
   opacity: 0.8;
+  display: block;
 }
 
 .value {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: bold;
+  display: block;
 }
 
 .other-players {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
+}
+
+.player-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  color: white;
+  text-align: center;
+  border: 2px solid transparent;
+}
+
+.player-card.current {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+}
+
+.player-name {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.card-count {
+  font-size: 0.875rem;
+  opacity: 0.8;
 }
 
 .game-board {
@@ -257,13 +423,10 @@ onMounted(() => {
   margin: 3rem 0;
 }
 
-.draw-pile {
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.draw-pile:hover {
-  transform: scale(1.05);
+.pile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .card-back {
@@ -272,22 +435,67 @@ onMounted(() => {
   background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
   border-radius: 1rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s;
+  color: white;
 }
 
-.deck-count {
-  position: absolute;
-  bottom: 0.5rem;
-  right: 0.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  color: #1e3a8a;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
+.card-back:hover {
+  transform: scale(1.05);
+}
+
+.pile-label {
   font-weight: bold;
-  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-pile {
+  color: white;
+  opacity: 0.5;
+}
+
+.card {
+  width: 120px;
+  height: 180px;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  font-weight: bold;
+  color: white;
+}
+
+.card.RED {
+  background: #ef4444;
+}
+
+.card.BLUE {
+  background: #3b82f6;
+}
+
+.card.GREEN {
+  background: #10b981;
+}
+
+.card.YELLOW {
+  background: #eab308;
+  color: #1f2937;
+}
+
+.card-type {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.card-number {
+  font-size: 2rem;
+  margin-top: 0.5rem;
 }
 
 .player-hand-section {
@@ -301,10 +509,81 @@ onMounted(() => {
   margin-bottom: 1.5rem;
 }
 
+.player-hand {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.card-wrapper {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.card-wrapper:hover {
+  transform: translateY(-10px);
+}
+
+.card-wrapper.selected .card {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+.game-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-play {
+  background: #10b981;
+  color: white;
+}
+
+.btn-play:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-2px);
+}
+
+.btn-draw {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-draw:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-2px);
+}
+
+.btn-uno {
+  background: #f59e0b;
+  color: white;
+}
+
+.btn-uno:hover:not(:disabled) {
+  background: #d97706;
+  transform: translateY(-2px);
+}
+
 .btn-danger {
   background: #ef4444;
   color: white;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: 0.5rem;
   font-weight: bold;
@@ -314,5 +593,63 @@ onMounted(() => {
 
 .btn-danger:hover {
   background: #dc2626;
+}
+
+.color-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.color-picker {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+}
+
+.colors {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.color-button {
+  width: 80px;
+  height: 80px;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+  transition: transform 0.2s;
+}
+
+.color-button:hover {
+  transform: scale(1.1);
+}
+
+.color-button.RED {
+  background: #ef4444;
+}
+
+.color-button.BLUE {
+  background: #3b82f6;
+}
+
+.color-button.GREEN {
+  background: #10b981;
+}
+
+.color-button.YELLOW {
+  background: #eab308;
+  color: #1f2937;
 }
 </style>
