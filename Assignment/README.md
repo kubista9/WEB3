@@ -21,3 +21,27 @@
 
   docker start mongodb
 
+### For apollo server
+
+  mutation {
+  login(username: "jakub", password: "123456") {
+    token
+    user {
+      id
+      username
+    }
+  }
+}
+
+mutation {
+  register(username: "jakub", password: "123456") {
+    token
+    user {
+      id
+      username
+    }
+  }
+}
+
+
+
