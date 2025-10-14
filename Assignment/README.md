@@ -1,8 +1,9 @@
-## Tests passed
+## Tests passed
 
 40 failed, 198 passed 06.10
 
-## Commands
+## Commands
+
 ### General
   npm install
 
@@ -16,7 +17,7 @@
 
   npm run dev
 
-### MongoDB
+### MongoDB
   docker ps
 
   docker start mongodb
@@ -46,6 +47,3 @@ mutation {
     }
   }
 }
-
-
-
