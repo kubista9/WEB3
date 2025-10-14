@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import { createInitialDeck, createDeckFromMemento as createDeckFromMemento } from '../utils/test_adapter'
-import { standardShuffler } from '../../src/utils/random_utils'
+import { standardShuffler } from '../../utils/random_utils'
 import { is } from '../utils/predicates'
-import * as deck from '../../src/model/deck'
+import * as deck from '../../model/deck'
 import { memoizingShuffler } from '../utils/shuffling'
-import * as reqirements from '../../src/model/interfaces'
+import * as reqirements from '../../model/interfaces'
 
 describe("Initial deck", () => {
   const initialDeck = createInitialDeck()

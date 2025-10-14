@@ -1,9 +1,9 @@
-import { Randomizer, Shuffler } from '../../src/utils/random_utils'
-import { Deck } from '../../src/model/deck'
-import { CardTypes, GameMemento, RoundMemento } from '../../src/model/interfaces'
-import { Round } from '../../src/model/round'
-import { Game } from '../../src/model/game'
-import { standardRandomizer, standardShuffler } from '../../src/utils/random_utils'
+import { Randomizer, Shuffler } from '../../utils/random_utils'
+import { Deck } from '../../model/deck'
+import { CardTypes, GameMemento, RoundMemento } from '../../model/interfaces'
+import { Round } from '../../model/round'
+import { Game } from '../../model/game'
+import { standardRandomizer, standardShuffler } from '../../utils/random_utils'
 
 export function createInitialDeck(): Deck {
   const deck = new Deck()
@@ -32,7 +32,7 @@ export function createRound({
 }
 
 export function createRoundFromMemento(
-  memento: RoundMemento, 
+  memento: RoundMemento,
   shuffler: Shuffler<CardTypes> = standardShuffler
 ): Round {
   return Round.fromMemento(memento, shuffler)
@@ -52,12 +52,12 @@ export function createGame(props: GameConfig = {}): Game {
   const shuffler = props.shuffler ?? standardShuffler;
   const randomizer = props.randomizer ?? standardRandomizer;
   const cardsPerPlayer = props.cardsPerPlayer ?? 7;
-  
+
   return new Game(players, targetScore, shuffler, randomizer, cardsPerPlayer);
 }
 
 export function createGameFromMemento(
-  memento: GameMemento, 
+  memento: GameMemento,
   shuffler: Shuffler<CardTypes> = standardShuffler
 ): Game {
   return Game.fromMemento(memento, shuffler, standardRandomizer)

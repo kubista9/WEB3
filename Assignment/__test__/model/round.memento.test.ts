@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from '@jest/globals'
-import { Round } from '../../src/model/round'
+import { Round } from '../../model/round'
 import { is } from '../utils/predicates'
 import { createRoundFromMemento } from '../utils/test_adapter'
 
