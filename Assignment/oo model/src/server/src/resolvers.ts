@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Player, PendingGame, ActiveGame, GameHistory } from './models.js';
+import { Player, PendingGame, ActiveGame, GameHistory, UserModel } from './models.js';
 import { pubsub } from './server.js';
 import { PubSub } from 'graphql-subscriptions';
 import mongoose from 'mongoose';
@@ -7,6 +7,8 @@ import { Game } from '../../model/game';
 import { Round } from '../../model/round';
 import { standardShuffler, standardRandomizer } from '../..//utils/random_utils';
 import type { Card, Color, GameMemento, RoundMemento } from '../../model/interfaces';
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 
 const GAME_UPDATED = 'GAME_UPDATED';
 const PENDING_GAME_UPDATED = 'PENDING_GAME_UPDATED';
@@ -141,6 +143,66 @@ export const resolvers = {
   },
 
   Mutation: {
+    async register(
+      _: any,
+      { username, password }: { username: string; password: string }
+    ) {
+      const existing = await UserModel.findOne({ username });
+      if (existing) {
+        throw new GraphQLError('User already exists', {
+          extensions: { code: 'USER_EXISTS' },
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await UserModel.create({ username, password: hashedPassword });
+
+      const token = jwt.sign(
+        { username: user.username },
+        process.env.JWT_SECRET || 'supersecretkey'
+      );
+
+      return {
+        token,
+        user: {
+          id: username,
+          username,
+        },
+      };
+    },
+
+    async login(
+      _: any,
+      { username, password }: { username: string; password: string }
+    ) {
+      const user = await UserModel.findOne({ username });
+      if (!user) {
+        throw new GraphQLError('User not found', {
+          extensions: { code: 'USER_NOT_FOUND' },
+        });
+      }
+
+      const isValid = await bcrypt.compare(password, user.password);
+      if (!isValid) {
+        throw new GraphQLError('Invalid password', {
+          extensions: { code: 'INVALID_PASSWORD' },
+        });
+      }
+
+      const token = jwt.sign(
+        { username: user.username },
+        process.env.JWT_SECRET || 'supersecretkey'
+      );
+
+      return {
+        token,
+        user: {
+          id: username,
+          username,
+        },
+      };
+    },
+
     async createGame(
       _: any,
       { input }: { input: { maxPlayers: number; username: string } },
@@ -237,10 +299,10 @@ export const resolvers = {
       const playerNames = pendingGame.players.map((p: any) => p.username);
       const gameInstance = new Game(
         playerNames,
-        500, // target score
+        500,
         standardShuffler,
         standardRandomizer,
-        7 // cards per player
+        7
       );
 
       // Create ActiveGame in DB

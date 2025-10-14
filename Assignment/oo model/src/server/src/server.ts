@@ -10,6 +10,8 @@ import { typeDefs } from './typeDefs';
 import { resolvers } from './resolvers';
 import { PubSub } from 'graphql-subscriptions';
 import 'dotenv/config';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default'
+
 
 const PORT = 4000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/uno-game';
@@ -31,7 +33,9 @@ async function startServer() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-  });
+    plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
+  })
+
 
   await server.start();
 

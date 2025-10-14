@@ -12,7 +12,7 @@ export interface ICard {
 
 export interface IMove extends Document {
   gameId: mongoose.Types.ObjectId;
-  playerId: mongoose.Types.ObjectId;
+  playerId: string; // username
   username: string;
   cardPlayed?: ICard;
   drawCount?: number;
@@ -22,27 +22,27 @@ export interface IMove extends Document {
 }
 
 export interface IPendingGame extends Document {
-  creatorId: mongoose.Types.ObjectId;
+  creatorId: string; // username
   creatorUsername: string;
-  players: Array<{ _id: mongoose.Types.ObjectId; username: string }>;
+  players: Array<{ username: string }>;
   maxPlayers: number;
   createdAt: Date;
   expiresAt: Date;
 }
 
 export interface IActiveGame extends Document {
-  players: Array<{ _id: mongoose.Types.ObjectId; username: string }>;
+  players: Array<{ username: string }>;
   currentPlayerIndex: number;
   direction: number;
   discardPile: ICard[];
   drawPile: ICard[];
   playerHands: Array<{
-    playerId: mongoose.Types.ObjectId;
+    playerId: string; 
     username: string;
     hand: ICard[];
   }>;
   gameStatus: string;
-  gameMemento: any; // Store serialized game state
+  gameMemento: any;
   pendingGameId?: mongoose.Types.ObjectId;
   moves: mongoose.Types.ObjectId[];
   createdAt: Date;
@@ -52,14 +52,20 @@ export interface IActiveGame extends Document {
 }
 
 export interface IGameHistory extends Document {
-  players: Array<{ _id: mongoose.Types.ObjectId; username: string }>;
+  players: Array<{ username: string }>;
   rounds: number;
-  winnerId: mongoose.Types.ObjectId;
-  scores: Array<{ playerId: mongoose.Types.ObjectId; username: string; score: number }>;
+  winnerId: string;
+  scores: Array<{ playerId: string; username: string; score: number }>;
   completedAt: Date;
 }
 
-// Player Schema
+export interface IUser extends Document {
+  username: string;
+  password: string;
+  createdAt: Date;
+}
+
+// Player Schema - simplified, username is the ID
 const playerSchema = new Schema<IPlayer>(
   {
     username: {
@@ -68,6 +74,7 @@ const playerSchema = new Schema<IPlayer>(
       unique: true,
       trim: true,
       minlength: 1,
+      primaryKey: true,
     },
   },
   { timestamps: true }
@@ -82,8 +89,7 @@ const moveSchema = new Schema<IMove>(
       required: true,
     },
     playerId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Player',
+      type: String,
       required: true,
     },
     username: { type: String, required: true },
@@ -105,14 +111,12 @@ const moveSchema = new Schema<IMove>(
 const pendingGameSchema = new Schema<IPendingGame>(
   {
     creatorId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Player',
+      type: String,
       required: true,
     },
     creatorUsername: { type: String, required: true },
     players: [
       {
-        _id: { type: Schema.Types.ObjectId, ref: 'Player' },
         username: String,
       },
     ],
@@ -139,7 +143,6 @@ const activeGameSchema = new Schema<IActiveGame>(
   {
     players: [
       {
-        _id: { type: Schema.Types.ObjectId, ref: 'Player' },
         username: String,
       },
     ],
@@ -159,7 +162,7 @@ const activeGameSchema = new Schema<IActiveGame>(
     ],
     playerHands: [
       {
-        playerId: { type: Schema.Types.ObjectId, ref: 'Player' },
+        playerId: String,
         username: String,
         hand: [
           {
@@ -170,7 +173,7 @@ const activeGameSchema = new Schema<IActiveGame>(
       },
     ],
     gameStatus: { type: String, enum: ['active', 'finished'], default: 'active' },
-    gameMemento: { type: Schema.Types.Mixed, required: true }, // Store serialized game state
+    gameMemento: { type: Schema.Types.Mixed, required: true },
     pendingGameId: { type: Schema.Types.ObjectId, ref: 'PendingGame' },
     moves: [{ type: Schema.Types.ObjectId, ref: 'Move' }],
     createdAt: { type: Date, default: Date.now },
@@ -186,19 +189,17 @@ const gameHistorySchema = new Schema<IGameHistory>(
   {
     players: [
       {
-        _id: { type: Schema.Types.ObjectId, ref: 'Player' },
         username: String,
       },
     ],
     rounds: { type: Number, required: true },
     winnerId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Player',
+      type: String,
       required: true,
     },
     scores: [
       {
-        playerId: { type: Schema.Types.ObjectId, ref: 'Player' },
+        playerId: String,
         username: String,
         score: Number,
       },
@@ -208,9 +209,18 @@ const gameHistorySchema = new Schema<IGameHistory>(
   { timestamps: false }
 );
 
-// Create Models
+// User Schema - for authentication
+const userSchema = new Schema<IUser>(
+  {
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+  },
+  { timestamps: true }
+);
+
 export const Player = mongoose.model<IPlayer>('Player', playerSchema);
 export const Move = mongoose.model<IMove>('Move', moveSchema);
 export const PendingGame = mongoose.model<IPendingGame>('PendingGame', pendingGameSchema);
 export const ActiveGame = mongoose.model<IActiveGame>('ActiveGame', activeGameSchema);
 export const GameHistory = mongoose.model<IGameHistory>('GameHistory', gameHistorySchema);
+export const UserModel = mongoose.model<IUser>('User', userSchema);

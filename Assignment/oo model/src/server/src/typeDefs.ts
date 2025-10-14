@@ -122,4 +122,15 @@ export const typeDefs = gql`
     pendingGameUpdated(gameId: ID!): PendingGame!
     gameFinished(gameId: ID!): RoundResult!
   }
+
+    type AuthPayload {
+    token: String!
+    user: Player!
+  }
+
+  extend type Mutation {
+    register(username: String!, password: String!): AuthPayload!
+    login(username: String!, password: String!): AuthPayload!
+  }
+
 `;
