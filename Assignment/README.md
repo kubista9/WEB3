@@ -3,6 +3,7 @@
 40 failed, 198 passed 06.10
 
 ## Commands
+### General
   npm install
 
   npm test
@@ -15,11 +16,14 @@
 
   npm run dev
 
-  docker run -d -p 27017:27017 --name mongodb mongo:latest
-
+### MongoDB
   docker ps
 
   docker start mongodb
+
+or 
+
+  docker run -d -p 27017:27017 --name mongodb mongo:latest
 
 ### For apollo server
 
