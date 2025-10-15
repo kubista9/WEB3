@@ -2,7 +2,6 @@ import { GraphQLError } from 'graphql';
 import { Player, PendingGame, ActiveGame, GameHistory, UserModel } from './models.js';
 import { pubsub } from './server.js';
 import { PubSub } from 'graphql-subscriptions';
-import mongoose from 'mongoose';
 import { Game } from '../../model/game';
 import { Round } from '../../model/round';
 import { standardShuffler, standardRandomizer } from '../..//utils/random_utils';
@@ -309,7 +308,6 @@ export const resolvers = {
         });
       }
 
-      // Create Game instance
       const playerNames = pendingGame.players.map((p: any) => p.username);
       const gameInstance = new Game(
         playerNames,
@@ -319,35 +317,33 @@ export const resolvers = {
         7
       );
 
-      // Create ActiveGame in DB
+      const round = gameInstance.currentRound();
+      if (!round) {
+        throw new GraphQLError('No round initialized when starting the game', {
+          extensions: { code: 'ROUND_NOT_INITIALIZED' },
+        });
+      }
       const activeGame = await ActiveGame.create({
         pendingGameId: input.gameId,
         players: pendingGame.players,
         gameMemento: gameInstance.toMemento(),
         gameStatus: 'active',
-        createdAt: new Date(),
+        currentPlayerIndex: round.playerInTurn() ?? 0,
       });
 
       const gameId = (activeGame._id as any).toString();
 
-      // Store game instance in memory
       activeGamesMap.set(gameId, gameInstance);
 
-      // Set up game end listener
-      const round = gameInstance.currentRound();
-      if (round) {
-        round.onEnd((event: { winner: number }) => {
-          const roundScore = round.score();
-          handleRoundEnd(gameId, event.winner, roundScore, pubsub);
-        });
-      }
+      round.onEnd((event: { winner: number }) => {
+        const roundScore = round.score();
+        handleRoundEnd(gameId, event.winner, roundScore, pubsub);
+      });
 
-      // Delete pending game
       await PendingGame.deleteOne({ _id: input.gameId });
 
-      // Publish update
       const graphqlGame = {
-        ...roundToGraphQL(round!, gameId),
+        ...roundToGraphQL(round, gameId),
         gameId,
       };
 
@@ -356,7 +352,8 @@ export const resolvers = {
       });
 
       return graphqlGame;
-    },
+    }
+    ,
 
     async playCard(
       _: any,

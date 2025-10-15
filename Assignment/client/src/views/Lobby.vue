@@ -98,15 +98,31 @@
 
             </div>
             </div>
+            <!-- Buttons -->
+<div class="game-actions">
+  <!-- Host sees Start Game -->
+  <button
+    v-if="game.players[0]?.username === authStore.user?.username && game.players.length >= 2"
+    @click="handleStartGame(game.id)"
+    class="btn btn-primary"
+  >
+    Start Game
+  </button>
 
-                        <button
-              v-if="game.players[0]?.username === authStore.user?.username && game.players.length >= 2"
-              @click="handleStartGame(game.id)"
-              class="btn btn-primary"
-            >
-              Start Game
-</button>
+  <!-- Non-hosts can join if not already in -->
+  <button
+    v-else-if="!game.players.some(p => p.username === authStore.user?.username) && game.players.length < game.maxPlayers"
+    @click="joinGame(game.id)"
+    class="btn btn-join"
+  >
+    Join Game
+  </button>
 
+  <!-- Already joined players waiting for host -->
+  <div v-else class="waiting-text">
+    Waiting for host to start...
+  </div>
+</div>
 
           </div>
         </div>
