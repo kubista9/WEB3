@@ -22,7 +22,6 @@
               placeholder="Enter game name"
             />
           </div>
-          
           <div class="form-group">
             <label class="form-label">Max Players</label>
             <select v-model.number="newGame.maxPlayers" class="form-select">
@@ -31,7 +30,6 @@
               <option :value="4">4 Players</option>
             </select>
           </div>
-
           <div class="form-group">
             <label class="form-label">Target Score</label>
             <input
@@ -43,8 +41,11 @@
               step="50"
             />
           </div>
-
-          <button @click="createGame" class="btn btn-primary" :disabled="!canCreateGame">
+          <button
+            @click="createGame"
+            class="btn btn-primary"
+            :disabled="!canCreateGame"
+          >
             <span class="btn-icon">🎮</span>
             <span>Create Game</span>
           </button>
@@ -79,51 +80,61 @@
             :class="{ full: game.players.length >= game.maxPlayers }"
           >
             <div class="game-card-header">
-              <h3 class="game-name">{{ game.name }}</h3>
-              <span class="game-status" :class="game.status">
-                {{ game.status }}
-              </span>
+              <h3 class="game-name">{{ game.creatorUsername }}'s Game</h3>
+              <span class="game-status waiting">waiting</span>
             </div>
 
             <div class="game-info">
               <div class="info-item">
                 <span class="info-label">Players:</span>
-                <span class="info-value">{{ game.players.length }} / {{ game.maxPlayers }}</span>
+                <span class="info-value"
+                  >{{ game.players.length }} / {{ game.maxPlayers }}</span
+                >
               </div>
               <div class="info-item">
                 <span class="info-label">Host:</span>
-                <span class="info-value">
-              {{ game.players[0]?.username || 'Unknown' }}
-            </span>
-
+                <span class="info-value">{{ game.creatorUsername }}</span>
+              </div>
             </div>
+
+            <!-- Action buttons -->
+            <div class="game-actions">
+              <!-- Host (creator) -->
+              <template v-if="isHost(game)">
+                <button
+                  v-if="game.players.length >= 2"
+                  @click="handleStartGame(game.id)"
+                  class="btn btn-primary"
+                  :disabled="isStarting"
+                >
+                  <span v-if="isStarting">Starting...</span>
+                  <span v-else>Start Game ({{ game.players.length }}/{{ game.maxPlayers }})</span>
+                </button>
+                <div v-else class="waiting-text">
+                  Waiting for players to join ({{ game.players.length }}/{{
+                    game.maxPlayers
+                  }})...
+                </div>
+              </template>
+
+              <!-- Non-hosts -->
+              <template v-else>
+                <!-- Already in the game -->
+                <div v-if="isInGame(game)" class="waiting-text">
+                  Waiting for host to start...
+                </div>
+                <!-- Can join the game -->
+                <button
+                  v-else-if="canJoin(game)"
+                  @click="joinGame(game.id)"
+                  class="btn btn-join"
+                >
+                  Join Game
+                </button>
+                <!-- Game is full -->
+                <div v-else class="waiting-text">Game is full</div>
+              </template>
             </div>
-            <!-- Buttons -->
-<div class="game-actions">
-  <!-- Host sees Start Game -->
-  <button
-    v-if="game.players[0]?.username === authStore.user?.username && game.players.length >= 2"
-    @click="handleStartGame(game.id)"
-    class="btn btn-primary"
-  >
-    Start Game
-  </button>
-
-  <!-- Non-hosts can join if not already in -->
-  <button
-    v-else-if="!game.players.some(p => p.username === authStore.user?.username) && game.players.length < game.maxPlayers"
-    @click="joinGame(game.id)"
-    class="btn btn-join"
-  >
-    Join Game
-  </button>
-
-  <!-- Already joined players waiting for host -->
-  <div v-else class="waiting-text">
-    Waiting for host to start...
-  </div>
-</div>
-
           </div>
         </div>
       </div>
@@ -131,40 +142,52 @@
   </div>
 </template>
 
+// SCRIPT:
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useLobbyStore } from '@/stores/lobby'
+import { useGameStore } from '@/stores/game'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const lobbyStore = useLobbyStore()
+const gameStore = useGameStore()
 
 const newGame = ref({
   name: '',
   maxPlayers: 4,
-  targetScore: 500
+  targetScore: 500,
 })
 
 const loading = ref(false)
 const refreshing = ref(false)
+const isStarting = ref(false)
+const refreshInterval = ref<ReturnType<typeof setInterval> | null>(null)
 
 const availableGames = computed(() => lobbyStore.availableGames)
 
 const canCreateGame = computed(() => {
-  return newGame.value.name.trim().length > 0 && 
-         newGame.value.maxPlayers >= 2 && 
-         newGame.value.targetScore >= 100
+  return (
+    newGame.value.name.trim().length > 0 &&
+    newGame.value.maxPlayers >= 2 &&
+    newGame.value.targetScore >= 100
+  )
 })
 
 onMounted(async () => {
   loading.value = true
   await refreshGames()
   loading.value = false
-  setInterval(refreshGames, 5000)
+  refreshInterval.value = setInterval(refreshGames, 5000)
 })
 
+onUnmounted(() => {
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value)
+  }
+})
 
 async function refreshGames() {
   refreshing.value = true
@@ -177,10 +200,12 @@ async function refreshGames() {
 
 async function createGame() {
   if (!canCreateGame.value) return
-
   try {
-    const game = await lobbyStore.createGame(newGame.value.name, newGame.value.maxPlayers)
-    router.push(`/game/${game.id}`)
+    const game = await lobbyStore.createGame(
+      newGame.value.name,
+      newGame.value.maxPlayers
+    )
+    // Don't redirect immediately, wait for game to start
   } catch (error: any) {
     console.error('Failed to create game:', error)
     alert('Failed to create game: ' + error.message)
@@ -190,13 +215,13 @@ async function createGame() {
 async function joinGame(gameId: string) {
   try {
     await lobbyStore.joinGame(gameId)
-    router.push(`/game/${gameId}`)
+    // Refresh to see updated player list
+    await refreshGames()
   } catch (error: any) {
     console.error('Failed to join game:', error)
     alert('Failed to join game: ' + error.message)
   }
 }
-
 
 function handleLogout() {
   authStore.logout()
@@ -204,15 +229,50 @@ function handleLogout() {
 }
 
 async function handleStartGame(gameId: string) {
+  if (isStarting.value) {
+    console.log('Already starting game, ignoring...')
+    return
+  }
+
+  // Stop auto-refresh while starting
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value)
+    refreshInterval.value = null
+  }
+
+  isStarting.value = true
+
   try {
-    const game = await lobbyStore.startGame(gameId)
-    router.push(`/game/${game.gameId}`)
+    console.log('Starting game:', gameId)
+    const result = await lobbyStore.startGame(gameId)
+    console.log('Game started, result:', result)
+
+    // Store the game in gameStore before redirecting
+    gameStore.setGame(result)
+
+    // Redirect to game page
+    await router.push(`/game/${result.gameId}`)
   } catch (error: any) {
     console.error('Failed to start game:', error)
     alert('Failed to start game: ' + error.message)
+    // Restart auto-refresh on error
+    refreshInterval.value = setInterval(refreshGames, 5000)
+  } finally {
+    isStarting.value = false
   }
 }
 
+function isHost(game: any) {
+  return game?.creatorUsername === authStore.user?.username
+}
+
+function isInGame(game: any) {
+  return !!game?.players?.some((p: any) => p.username === authStore.user?.username)
+}
+
+function canJoin(game: any) {
+  return !isInGame(game) && game.players.length < game.maxPlayers
+}
 </script>
 
 <style scoped>
@@ -446,7 +506,7 @@ async function handleStartGame(gameId: string) {
 .game-name {
   font-size: 1.25rem;
   font-weight: 700;
-  colorcolor: #1f2937;
+  color: #1f2937;
   margin: 0;
 }
 

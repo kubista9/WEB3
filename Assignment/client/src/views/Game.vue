@@ -2,8 +2,8 @@
   <div class="game-view">
     <!-- Notifications -->
     <TransitionGroup name="notification" tag="div" class="notifications">
-      <div 
-        v-for="(notification, index) in notifications" 
+      <div
+        v-for="(notification, index) in notifications"
         :key="index"
         class="notification"
       >
@@ -29,14 +29,14 @@
 
     <!-- Other Players -->
     <div class="other-players">
-      <div 
-        v-for="(player, index) in otherPlayers" 
+      <div
+        v-for="(player, index) in otherPlayers"
         :key="index"
         class="player-card"
-        :class="{ current: isCurrentPlayer(index) }"
+        :class="{ current: isCurrentPlayer(player) }"
       >
         <div class="player-name">{{ player }}</div>
-        <div class="card-count">🃏 {{ getPlayerCardCount(index) }}</div>
+        <div class="card-count">🃏 {{ getPlayerCardCount(player) }}</div>
       </div>
     </div>
 
@@ -51,90 +51,97 @@
       </div>
 
       <!-- Discard Pile -->
-<div class="pile">
-  <div
-    v-if="topCard"
-    class="card"
-    :class="{ [(topCard as any).color || '']: true }"
-  >
-    <div class="card-type">{{ topCard.type }}</div>
-    <div
-      v-if="(topCard as any).number !== undefined"
-      class="card-number"
-    >
-      {{ (topCard as any).number }}
-    </div>
-  </div>
-  <div v-else class="empty-pile">No cards</div>
-</div>
-
-<!-- Player Hand -->
-<div class="player-hand-section">
-  <h3>Your Hand</h3>
-  <div class="player-hand">
-    <div
-      v-for="(card, index) in myHand"
-      :key="index"
-      class="card-wrapper"
-      :class="{ selected: selectedCardIndex === index }"
-      @click="selectCard(index)"
-    >
-      <div
-        class="card"
-        :class="{ [(card as any).color || '']: true }"
-      >
-        <div class="card-type">{{ card.type }}</div>
+      <div class="pile">
         <div
-          v-if="(card as any).number !== undefined"
-          class="card-number"
+          v-if="topCard"
+          class="card"
+          :class="{ [(topCard as any).color || '']: true }"
         >
-          {{ (card as any).number }}
+          <div class="card-type">{{ topCard.type }}</div>
+          <div
+            v-if="(topCard as any).number !== undefined"
+            class="card-number"
+          >
+            {{ (topCard as any).number }}
+          </div>
         </div>
+        <div v-else class="empty-pile">No cards</div>
       </div>
     </div>
-  </div>
-</div>
 
+    <!-- Player Hand -->
+    <div class="player-hand-section">
+      <h3>Your Hand</h3>
+      <div class="player-hand">
+        <div
+          v-for="(card, index) in myHand"
+          :key="index"
+          class="card-wrapper"
+          :class="{ selected: selectedCardIndex === index }"
+          @click="selectCard(index)"
+        >
+          <div class="card" :class="{ [(card as any).color || '']: true }">
+            <div class="card-type">{{ card.type }}</div>
+            <div
+              v-if="(card as any).number !== undefined"
+              class="card-number"
+            >
+              {{ (card as any).number }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Game Controls -->
     <div class="game-controls">
       <button
         @click="handlePlayCard"
-        :disabled="!isMyTurn || selectedCardIndex === null"
         class="btn btn-play"
+        :disabled="selectedCardIndex === null || !isMyTurn"
       >
         Play Card
       </button>
-      <button
-        @click="handleDrawCard"
-        :disabled="!isMyTurn"
-        class="btn btn-draw"
-      >
+      <button @click="handleDrawCard" class="btn btn-draw" :disabled="!isMyTurn">
         Draw Card
       </button>
-      <button
-        @click="handleSayUno"
-        :disabled="!canSayUno"
-        class="btn btn-uno"
-      >
+      <button @click="handleSayUno" class="btn btn-uno" :disabled="!canSayUno">
         UNO!
       </button>
     </div>
 
     <!-- Color Picker Modal -->
-    <div v-if="showColorPicker" class="color-picker-overlay" @click.self="showColorPicker = false">
-      <div class="color-picker">
-        <h3>Choose a Color</h3>
+    <div
+      v-if="showColorPicker"
+      class="color-picker-overlay"
+      @click="showColorPicker = false"
+    >
+      <div class="color-picker" @click.stop>
+        <h3>Choose a color</h3>
         <div class="colors">
           <button
-            v-for="color in ['RED', 'BLUE', 'GREEN', 'YELLOW']"
-            :key="color"
-            class="color-button"
-            :class="{ [color]: true }"
-            @click="handleColorSelection(color)"
+            @click="handleColorSelection('RED')"
+            class="color-button RED"
           >
-            {{ color }}
+            Red
+          </button>
+          <button
+            @click="handleColorSelection('BLUE')"
+            class="color-button BLUE"
+          >
+            Blue
+          </button>
+          <button
+            @click="handleColorSelection('GREEN')"
+            class="color-button GREEN"
+          >
+            Green
+          </button>
+          <button
+            @click="handleColorSelection('YELLOW')"
+            class="color-button YELLOW"
+          >
+            Yellow
           </button>
         </div>
       </div>
@@ -142,6 +149,7 @@
   </div>
 </template>
 
+// SCRIPT:
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -162,77 +170,52 @@ const pendingCardIndex = ref<number | null>(null)
 // Computed properties
 const myHand = computed(() => {
   const game = gameStore.game
-  if (!game) return []
-  const round = game.currentRound?.()
-  if (!round) return []
-  // Find the player index for the current user
+  if (!game || !game.playerHands) return []
+
   const username = authStore.user?.username
-  let playerIndex = 0
-  for (let i = 0; i < round.playerCount; i++) {
-    if (round.player(i) === username) {
-      playerIndex = i
-      break
-    }
-  }
-  return round.playerHand(playerIndex) || []
+  const myHandData = game.playerHands.find((ph: any) => ph.username === username)
+  return myHandData?.hand || []
 })
 
 const topCard = computed(() => {
   const game = gameStore.game
-  if (!game) return null
-  const round = game.currentRound?.()
-  if (!round) return null
-  return round.discardPile?.()?.peek?.() || null
+  if (!game || !game.discardPile || game.discardPile.length === 0) return null
+  return game.discardPile[0]
 })
 
 const isMyTurn = computed(() => {
   const game = gameStore.game
   if (!game) return false
-  const round = game.currentRound?.()
-  if (!round) return false
+
   const username = authStore.user?.username
-  let playerIndex = 0
-  for (let i = 0; i < round.playerCount; i++) {
-    if (round.player(i) === username) {
-      playerIndex = i
-      break
-    }
-  }
-  return round.playerInTurn?.() === playerIndex
+  return game.currentPlayer?.username === username
 })
 
 const players = computed(() => {
   const game = gameStore.game
-  if (!game) return []
-  const round = game.currentRound?.()
-  if (!round) return []
-  return Array.from({ length: round.playerCount }, (_, i) => round.player(i))
+  if (!game || !game.players) return []
+  return game.players.map((p: any) => p.username)
 })
 
 const currentPlayerName = computed(() => {
   const game = gameStore.game
-  if (!game) return ''
-  const round = game.currentRound?.()
-  if (!round) return ''
-  const playerIndex = round.playerInTurn?.()
-  return playerIndex !== undefined ? round.player(playerIndex) : ''
+  if (!game || !game.currentPlayer) return ''
+  return game.currentPlayer.username
 })
 
 const otherPlayers = computed(() => {
   const game = gameStore.game
-  if (!game) return []
-  const round = game.currentRound?.()
-  if (!round) return []
+  if (!game || !game.players) return []
   const myUsername = authStore.user?.username
-  return players.value.filter(p => p !== myUsername)
+  return game.players
+    .filter((p: any) => p.username !== myUsername)
+    .map((p: any) => p.username)
 })
 
 const drawPileCount = computed(() => {
   const game = gameStore.game
   if (!game) return 0
-  const round = game.currentRound?.()
-  if (!round) return 0
-  return round.drawPile?.()?.size || 0
+  return game.drawPileSize || 0
 })
 
 const canSayUno = computed(() => {
@@ -247,9 +230,9 @@ function selectCard(index: number) {
 
 async function handlePlayCard() {
   if (selectedCardIndex.value === null || !isMyTurn.value) return
-  
+
   const card = myHand.value[selectedCardIndex.value]
-  
+
   // Check if it's a wild card that needs color selection
   if (card.type === 'WILD CARD' || card.type === 'DRAW CARD') {
     pendingCardIndex.value = selectedCardIndex.value
@@ -304,29 +287,33 @@ function addNotification(message: string) {
   }, 3000)
 }
 
-function getPlayerCardCount(playerIndex: number) {
+function getPlayerCardCount(username: string) {
   const game = gameStore.game
-  if (!game) return 0
-  const round = game.currentRound?.()
-  if (!round) return 0
-  return round.playerHand(playerIndex)?.length || 0
+  if (!game || !game.playerHands) return 0
+  const handData = game.playerHands.find((ph: any) => ph.username === username)
+  return handData?.cardCount || 0
 }
 
-function isCurrentPlayer(playerIndex: number) {
+function isCurrentPlayer(username: string) {
   const game = gameStore.game
   if (!game) return false
-  const round = game.currentRound?.()
-  if (!round) return false
-  return round.playerInTurn?.() === playerIndex
+  return username === game.currentPlayer?.username
 }
 
 function leaveGame() {
+  gameStore.clearGame()
   router.push('/lobby')
 }
 
-onMounted(() => {
-  // Initialize or check game state
-  if (!gameStore.game) {
+onMounted(async () => {
+  try {
+    // If game is not already loaded, fetch it
+    if (!gameStore.game) {
+      await gameStore.fetchGame(gameId)
+    }
+  } catch (error) {
+    console.error('Failed to load game:', error)
+    alert('Failed to load game')
     router.push('/lobby')
   }
 })

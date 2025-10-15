@@ -55,27 +55,48 @@ function cardToGraphQL(card: Card | Record<string, string | number>) {
 
 function roundToGraphQL(round: Round, gameId: string) {
   const discardTop = round.discardPile().peek();
+  const playerCount = round.playerCount;
+  
+  console.log('roundToGraphQL - playerCount:', playerCount);
+  
+  // Safely get players array
+  const players = [];
+  for (let i = 0; i < playerCount; i++) {
+    try {
+      const username = round.player(i);
+      console.log(`Player ${i}:`, username);
+      players.push({
+        id: i.toString(),
+        username: username,
+      });
+    } catch (error) {
+      console.error(`Error getting player at index ${i}:`, error);
+      throw new GraphQLError(`Player index ${i} out of bounds`, {
+        extensions: { code: 'PLAYER_INDEX_ERROR' },
+      });
+    }
+  }
+
+  const currentPlayerIdx = round.playerInTurn() ?? 0;
+  
   return {
     id: gameId,
-    players: Array.from({ length: round.playerCount }, (_, i) => ({
-      id: i.toString(),
-      username: round.player(i),
-    })),
-    currentPlayerIndex: round.playerInTurn() ?? 0,
+    players: players,
+    currentPlayerIndex: currentPlayerIdx,
     currentPlayer: {
-      id: (round.playerInTurn() ?? 0).toString(),
-      username: round.player(round.playerInTurn() ?? 0),
+      id: currentPlayerIdx.toString(),
+      username: players[currentPlayerIdx]?.username || 'Unknown',
     },
     dealer: {
       id: round.dealer.toString(),
-      username: round.player(round.dealer),
+      username: players[round.dealer]?.username || 'Unknown',
     },
     direction: round.discardPile().toMemento()[0]?.type === 'REVERSE' ? -1 : 1,
     discardPile: round.discardPile().toMemento().slice(0, 5).map(cardToGraphQL),
     drawPileSize: round.drawPile().size,
-    playerHands: Array.from({ length: round.playerCount }, (_, i) => ({
-      playerId: i.toString(),
-      username: round.player(i),
+    playerHands: players.map((p, i) => ({
+      playerId: p.id,
+      username: p.username,
       cardCount: round.playerHand(i).length,
       hand: round.playerHand(i).map(cardToGraphQL),
     })),
@@ -83,12 +104,21 @@ function roundToGraphQL(round: Round, gameId: string) {
     hasEnded: round.hasEnded(),
     winner: round.winner() !== undefined ? {
       id: round.winner()!.toString(),
-      username: round.player(round.winner()!),
+      username: players[round.winner()!]?.username || 'Unknown',
     } : null,
   };
 }
 
 export const resolvers = {
+  // Type resolvers to handle MongoDB _id to GraphQL id mapping
+  PendingGame: {
+    id: (parent: any) => parent._id.toString(),
+  },
+  
+  ActiveGame: {
+    gameId: (parent: any) => parent._id?.toString() || parent.gameId,
+  },
+
   Query: {
     async me(_: any, __: any, { userId }: Context) {
       if (!userId) return null;
@@ -229,21 +259,16 @@ export const resolvers = {
       { userId, pubsub }: Context
     ) {
       const username = validateContext(userId);
-
-      // Get or create player
       const player = await getOrCreatePlayer(username);
 
-      // Find the pending game
       const game = await PendingGame.findById(input.gameId);
-      validateGameExists(game, 'Pending game not found');
-
+      
       if (!game) {
-        throw new GraphQLError('Game not found', {
+        throw new GraphQLError('Pending game not found', {
           extensions: { code: 'GAME_NOT_FOUND' },
         });
       }
 
-      // Check if player is already in the game
       const playerExists = game.players.some(
         (p: any) => p.username === username
       );
@@ -254,26 +279,22 @@ export const resolvers = {
         });
       }
 
-      // Check if game is full
       if (game.players.length >= game.maxPlayers) {
         throw new GraphQLError('Game is full', {
           extensions: { code: 'GAME_FULL' },
         });
       }
 
-      // Add player to game
       game.players.push({
         username: player.username,
       });
 
       await game.save();
 
-      // Publish update to specific game channel
       await pubsub.publish(`${PENDING_GAME_UPDATED}_${input.gameId}`, {
         pendingGameUpdated: game,
       });
 
-      // Also publish to general channel for lobby list
       await pubsub.publish(PENDING_GAME_UPDATED, {
         pendingGameUpdated: game,
       });
@@ -287,11 +308,19 @@ export const resolvers = {
       { userId, pubsub }: Context
     ) {
       const userId_validated = validateContext(userId);
+      
+      console.log('=== START GAME SERVER DEBUG ===');
+      console.log('Received gameId:', input.gameId);
+      console.log('User ID:', userId_validated);
+      
       const pendingGame = await PendingGame.findById(input.gameId);
-      validateGameExists(pendingGame, 'Pending game not found');
-
+      
+      console.log('Found pending game:', pendingGame?._id);
+      console.log('Creator ID:', pendingGame?.creatorId);
+      console.log('Players:', pendingGame?.players);
+      
       if (!pendingGame) {
-        throw new GraphQLError('Game not found', {
+        throw new GraphQLError('Pending game not found', {
           extensions: { code: 'GAME_NOT_FOUND' },
         });
       }
@@ -309,6 +338,8 @@ export const resolvers = {
       }
 
       const playerNames = pendingGame.players.map((p: any) => p.username);
+      console.log('Starting game with players:', playerNames);
+      
       const gameInstance = new Game(
         playerNames,
         500,
@@ -323,15 +354,19 @@ export const resolvers = {
           extensions: { code: 'ROUND_NOT_INITIALIZED' },
         });
       }
+
+      console.log('Round player count:', round.playerCount);
+
       const activeGame = await ActiveGame.create({
-        pendingGameId: input.gameId,
+        pendingGameId: pendingGame._id,
         players: pendingGame.players,
         gameMemento: gameInstance.toMemento(),
         gameStatus: 'active',
         currentPlayerIndex: round.playerInTurn() ?? 0,
       });
 
-      const gameId = (activeGame._id as any).toString();
+      const gameId = activeGame.id.toString();
+      console.log('Created active game with ID:', gameId);
 
       activeGamesMap.set(gameId, gameInstance);
 
@@ -340,7 +375,8 @@ export const resolvers = {
         handleRoundEnd(gameId, event.winner, roundScore, pubsub);
       });
 
-      await PendingGame.deleteOne({ _id: input.gameId });
+      await PendingGame.deleteOne({ _id: pendingGame._id });
+      console.log('Deleted pending game');
 
       const graphqlGame = {
         ...roundToGraphQL(round, gameId),
@@ -351,9 +387,9 @@ export const resolvers = {
         gameUpdated: graphqlGame,
       });
 
+      console.log('Game started successfully');
       return graphqlGame;
-    }
-    ,
+    },
 
     async playCard(
       _: any,
@@ -398,26 +434,22 @@ export const resolvers = {
       }
 
       try {
-        // Play the card
         round.play(input.cardIndex, input.chosenColor as Color);
 
         if (input.saidUno) {
           round.sayUno(currentPlayerIndex);
         }
 
-        // Save game state
         await ActiveGame.updateOne(
           { _id: input.gameId },
           { gameMemento: gameInstance.toMemento() }
         );
 
-        // Check if round ended
         if (round.hasEnded()) {
           const winner = round.winner();
           const score = round.score();
 
           if (winner !== undefined && score !== undefined) {
-            // Publish game finished event
             const winnerName = round.player(winner);
             await pubsub.publish(`${GAME_FINISHED}_${input.gameId}`, {
               gameFinished: {
@@ -427,7 +459,6 @@ export const resolvers = {
               },
             });
 
-            // Store game history
             const scores = Array.from({ length: round.playerCount }, (_, i) => ({
               playerId: i.toString(),
               username: round.player(i),
@@ -446,7 +477,6 @@ export const resolvers = {
           }
         }
 
-        // Publish game update
         const graphqlGame = {
           ...roundToGraphQL(round, input.gameId),
           gameId: input.gameId,
@@ -503,13 +533,11 @@ export const resolvers = {
       try {
         round.draw();
 
-        // Save game state
         await ActiveGame.updateOne(
           { _id: gameId },
           { gameMemento: gameInstance.toMemento() }
         );
 
-        // Publish update
         const graphqlGame = {
           ...roundToGraphQL(round, gameId),
           gameId,
@@ -550,7 +578,6 @@ export const resolvers = {
       try {
         round.sayUno(playerIndex);
 
-        // Save game state
         await ActiveGame.updateOne(
           { _id: gameId },
           { gameMemento: gameInstance.toMemento() }
@@ -599,7 +626,6 @@ export const resolvers = {
           accused: input.accused,
         });
 
-        // Save game state
         await ActiveGame.updateOne(
           { _id: input.gameId },
           { gameMemento: gameInstance.toMemento() }
@@ -688,7 +714,6 @@ async function handleRoundEnd(
 
   const winnerName = round.player(winner);
 
-  // Store game history
   const scores = Array.from({ length: round.playerCount }, (_, i) => ({
     playerId: i.toString(),
     username: round.player(i),
@@ -705,7 +730,6 @@ async function handleRoundEnd(
     completedAt: new Date(),
   });
 
-  // Publish finished event
   await pubsub.publish(`${GAME_FINISHED}_${gameId}`, {
     gameFinished: {
       winnerId: winner.toString(),
