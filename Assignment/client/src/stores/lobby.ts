@@ -22,11 +22,18 @@ export const useLobbyStore = defineStore('lobby', () => {
     return game
   }
 
+  async function startGame(gameId: string) {
+    const game = await lobbyService.startGame(gameId)
+    currentGame.value = game
+    return game
+  }
+
   return {
     availableGames,
     currentGame,
     fetchGames,
     createGame,
-    joinGame
+    joinGame,
+    startGame
   }
 })

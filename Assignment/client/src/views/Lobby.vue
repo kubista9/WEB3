@@ -92,17 +92,21 @@
               </div>
               <div class="info-item">
                 <span class="info-label">Host:</span>
-                <span class="info-value">{{ game.players[0] || 'Unknown' }}</span>
-              </div>
+                <span class="info-value">
+              {{ game.players[0]?.username || 'Unknown' }}
+            </span>
+
+            </div>
             </div>
 
-            <button
-  @click="joinGame(game.id)"
-  class="btn btn-join"
- :disabled="game.players.length >= game.maxPlayers"
->
-  {{ game.players.length >= game.maxPlayers ? 'Full' : 'Join Game' }}
+                        <button
+              v-if="game.players[0]?.username === authStore.user?.username && game.players.length >= 2"
+              @click="handleStartGame(game.id)"
+              class="btn btn-primary"
+            >
+              Start Game
 </button>
+
 
           </div>
         </div>
@@ -182,6 +186,17 @@ function handleLogout() {
   authStore.logout()
   router.push('/')
 }
+
+async function handleStartGame(gameId: string) {
+  try {
+    const game = await lobbyStore.startGame(gameId)
+    router.push(`/game/${game.gameId}`)
+  } catch (error: any) {
+    console.error('Failed to start game:', error)
+    alert('Failed to start game: ' + error.message)
+  }
+}
+
 </script>
 
 <style scoped>

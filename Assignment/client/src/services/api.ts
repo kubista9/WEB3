@@ -80,7 +80,6 @@ export const lobbyService = {
     return data.createGame
   },
 
-  // ✅ FIXED joinGame mutation
   async joinGame(gameId: string) {
     const { data } = await apolloClient.mutate({
       mutation: gql`
@@ -101,7 +100,30 @@ export const lobbyService = {
       }
     })
     return data.joinGame
-  }
+  },
+
+  async startGame(gameId: string) {
+  const { data } = await apolloClient.mutate({
+    mutation: gql`
+      mutation StartGame($input: StartGameInput!) {
+        startGame(input: $input) {
+          gameId
+          players {
+            username
+          }
+          currentPlayer {
+            username
+          }
+          gameStatus
+        }
+      }
+    `,
+    variables: {
+      input: { gameId }
+    }
+  })
+  return data.startGame
+}
 }
 
 export const gameService = {
@@ -179,5 +201,7 @@ export const gameService = {
       next: ({ data }) => callback(data.gameUpdated),
       error: (err) => console.error('Subscription error:', err)
     })
-  }
+  },
+
+  
 }
