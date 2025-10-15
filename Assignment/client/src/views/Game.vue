@@ -51,32 +51,50 @@
       </div>
 
       <!-- Discard Pile -->
-      <div class="pile">
-        <div v-if="topCard" class="card" :class="{ [topCard.color]: true }">
-          <div class="card-type">{{ topCard.type }}</div>
-          <div v-if="topCard.number" class="card-number">{{ topCard.number }}</div>
+<div class="pile">
+  <div
+    v-if="topCard"
+    class="card"
+    :class="{ [(topCard as any).color || '']: true }"
+  >
+    <div class="card-type">{{ topCard.type }}</div>
+    <div
+      v-if="(topCard as any).number !== undefined"
+      class="card-number"
+    >
+      {{ (topCard as any).number }}
+    </div>
+  </div>
+  <div v-else class="empty-pile">No cards</div>
+</div>
+
+<!-- Player Hand -->
+<div class="player-hand-section">
+  <h3>Your Hand</h3>
+  <div class="player-hand">
+    <div
+      v-for="(card, index) in myHand"
+      :key="index"
+      class="card-wrapper"
+      :class="{ selected: selectedCardIndex === index }"
+      @click="selectCard(index)"
+    >
+      <div
+        class="card"
+        :class="{ [(card as any).color || '']: true }"
+      >
+        <div class="card-type">{{ card.type }}</div>
+        <div
+          v-if="(card as any).number !== undefined"
+          class="card-number"
+        >
+          {{ (card as any).number }}
         </div>
-        <div v-else class="empty-pile">No cards</div>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Player Hand -->
-    <div class="player-hand-section">
-      <h3>Your Hand</h3>
-      <div class="player-hand">
-        <div
-          v-for="(card, index) in myHand"
-          :key="index"
-          class="card-wrapper"
-          :class="{ selected: selectedCardIndex === index }"
-          @click="selectCard(index)"
-        >
-          <div class="card" :class="{ [card.color]: true }">
-            <div class="card-type">{{ card.type }}</div>
-            <div v-if="card.number" class="card-number">{{ card.number }}</div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Game Controls -->

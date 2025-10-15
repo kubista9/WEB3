@@ -70,3 +70,16 @@ mutation CreateGame($input: CreateGameInput!) {
 }
 
 header type: authorization + token from login
+
+mutation JoinGame($input: JoinGameInput!) {
+  joinGame(input: $input) {
+    id
+    creatorId
+    creatorUsername
+    players {
+      username
+    }
+    maxPlayers
+    createdAt
+  }
+}

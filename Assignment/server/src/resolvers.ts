@@ -226,10 +226,15 @@ export const resolvers = {
 
     async joinGame(
       _: any,
-      { input }: { input: { gameId: string; username: string } },
-      { pubsub }: Context
+      { input }: { input: { gameId: string } },
+      { userId, pubsub }: Context
     ) {
-      const player = await getOrCreatePlayer(input.username);
+      const username = validateContext(userId);
+
+      // Get or create player
+      const player = await getOrCreatePlayer(username);
+
+      // Find the pending game
       const game = await PendingGame.findById(input.gameId);
       validateGameExists(game, 'Pending game not found');
 
@@ -239,27 +244,37 @@ export const resolvers = {
         });
       }
 
+      // Check if player is already in the game
       const playerExists = game.players.some(
-        (p: any) => p._id?.toString() === player._id?.toString()
+        (p: any) => p.username === username
       );
 
       if (playerExists) {
-        throw new GraphQLError('Player already in game', {
+        throw new GraphQLError('You are already in this game', {
           extensions: { code: 'PLAYER_ALREADY_JOINED' },
         });
       }
 
+      // Check if game is full
       if (game.players.length >= game.maxPlayers) {
         throw new GraphQLError('Game is full', {
           extensions: { code: 'GAME_FULL' },
         });
       }
 
+      // Add player to game
       game.players.push({
         username: player.username,
       });
 
       await game.save();
+
+      // Publish update to specific game channel
+      await pubsub.publish(`${PENDING_GAME_UPDATED}_${input.gameId}`, {
+        pendingGameUpdated: game,
+      });
+
+      // Also publish to general channel for lobby list
       await pubsub.publish(PENDING_GAME_UPDATED, {
         pendingGameUpdated: game,
       });

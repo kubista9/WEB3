@@ -97,12 +97,13 @@
             </div>
 
             <button
-              @click="joinGame(game.id)"
-              class="btn btn-join"
-              :disabled="game.players.length >= game.maxPlayers || game.status !== 'waiting'"
-            >
-              {{ game.players.length >= game.maxPlayers ? 'Full' : 'Join Game' }}
-            </button>
+  @click="joinGame(game.id)"
+  class="btn btn-join"
+ :disabled="game.players.length >= game.maxPlayers"
+>
+  {{ game.players.length >= game.maxPlayers ? 'Full' : 'Join Game' }}
+</button>
+
           </div>
         </div>
       </div>
@@ -141,7 +142,9 @@ onMounted(async () => {
   loading.value = true
   await refreshGames()
   loading.value = false
+  setInterval(refreshGames, 5000)
 })
+
 
 async function refreshGames() {
   refreshing.value = true
@@ -173,6 +176,7 @@ async function joinGame(gameId: string) {
     alert('Failed to join game: ' + error.message)
   }
 }
+
 
 function handleLogout() {
   authStore.logout()

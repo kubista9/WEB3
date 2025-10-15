@@ -81,7 +81,6 @@ export const typeDefs = gql`
 
   input JoinGameInput {
     gameId: ID!
-    username: String!
   }
 
   input StartGameInput {

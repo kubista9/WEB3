@@ -42,59 +42,63 @@ export const authService = {
 export const lobbyService = {
   async getGames() {
     const { data } = await apolloClient.query({
-        query: gql`
-    query GetGames {
-      pendingGames {
-        id
-        creatorUsername
-        players {
-          username
+      query: gql`
+        query GetGames {
+          pendingGames {
+            id
+            creatorUsername
+            players {
+              username
+            }
+            maxPlayers
+            createdAt
+          }
         }
-        maxPlayers
-        createdAt
-      }
-    }
-  `
+      `
     })
     return data.pendingGames
-},
+  },
 
   async createGame(name: string, maxPlayers: number) {
     const { data } = await apolloClient.mutate({
       mutation: gql`
-    mutation CreateGame($maxPlayers: Int!) {
-      createGame(input: { maxPlayers: $maxPlayers }) {
-        id
-        creatorId
-        creatorUsername
-        players {
-          username
+        mutation CreateGame($maxPlayers: Int!) {
+          createGame(input: { maxPlayers: $maxPlayers }) {
+            id
+            creatorId
+            creatorUsername
+            players {
+              username
+            }
+            maxPlayers
+            createdAt
+          }
         }
-        maxPlayers
-        createdAt
-      }
-    }
-  `,
+      `,
       variables: { maxPlayers }
     })
     return data.createGame
   },
 
+  // ✅ FIXED joinGame mutation
   async joinGame(gameId: string) {
     const { data } = await apolloClient.mutate({
       mutation: gql`
-        mutation JoinGame($gameId: ID!) {
-          joinGame(gameId: $gameId) {
+        mutation JoinGame($input: JoinGameInput!) {
+          joinGame(input: $input) {
             id
-            name
-            players
+            creatorUsername
+            players {
+              username
+            }
             maxPlayers
-            status
-            gameState
+            createdAt
           }
         }
       `,
-      variables: { gameId }
+      variables: {
+        input: { gameId }
+      }
     })
     return data.joinGame
   }
