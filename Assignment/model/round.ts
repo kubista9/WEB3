@@ -1,5 +1,5 @@
 import { Card, Color, Direction, RoundMemento, colors } from './interfaces';
-import { Deck, hasColor } from './deck';
+import { Deck } from './deck';
 import { Shuffler, standardShuffler } from '../utils/random_utils';
 
 export class Round {

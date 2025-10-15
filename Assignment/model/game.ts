@@ -1,7 +1,7 @@
 import { GameMemento } from './interfaces';
 import { Round } from './round';
 import { Shuffler, Randomizer, standardShuffler, standardRandomizer } from '../utils/random_utils';
-import { Card } from './deck';
+import { Card } from './interfaces';
 
 export class Game {
   private players: string[];
