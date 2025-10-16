@@ -1,3 +1,169 @@
+<template>
+  <div class="game-view">
+    <!-- Loading State -->
+    <div v-if="gameStore.loading" class="loading-overlay">
+      <div class="spinner-large"></div>
+      <p>Loading game...</p>
+    </div>
+
+    <!-- Game Content -->
+    <div v-else-if="gameStore.game" class="game-content">
+      <!-- Notifications -->
+      <TransitionGroup name="notification" tag="div" class="notifications">
+        <div
+          v-for="(notification, index) in notifications"
+          :key="index"
+          class="notification"
+        >
+          {{ notification }}
+        </div>
+      </TransitionGroup>
+
+      <!-- Game Header -->
+      <div class="game-header">
+        <h1>UNO Game</h1>
+        <div class="header-info">
+          <div>
+            <span class="label">Current Player:</span>
+            <span class="value">{{ currentPlayerName }}</span>
+          </div>
+          <div>
+            <span class="label">Your Cards:</span>
+            <span class="value">{{ myHand.length }}</span>
+          </div>
+        </div>
+        <button @click="leaveGame" class="btn-danger">Leave Game</button>
+      </div>
+
+      <!-- Other Players -->
+      <div class="other-players">
+        <div
+          v-for="player in otherPlayers"
+          :key="player"
+          class="player-card"
+          :class="{ current: isCurrentPlayer(player) }"
+        >
+          <div class="player-name">{{ player }}</div>
+          <div class="card-count">🃏 {{ getPlayerCardCount(player) }}</div>
+        </div>
+      </div>
+
+      <!-- Game Board -->
+      <div class="game-board">
+        <!-- Draw Pile -->
+        <div class="pile">
+          <div 
+            class="card-back" 
+            @click="handleDrawCard"
+            :class="{ disabled: !isMyTurn }"
+          >
+            <span class="pile-label">Draw</span>
+            <span class="card-count">{{ drawPileCount }}</span>
+          </div>
+        </div>
+
+        <!-- Discard Pile -->
+        <div class="pile">
+          <div
+            v-if="topCard"
+            class="card discard-card"
+            :class="getCardColorClass(topCard)"
+          >
+            <div class="card-display">{{ getCardDisplay(topCard) }}</div>
+          </div>
+          <div v-else class="empty-pile">No cards</div>
+        </div>
+      </div>
+
+      <!-- Player Hand -->
+      <div class="player-hand-section">
+        <h3>Your Hand</h3>
+        <div class="player-hand">
+          <div
+            v-for="(card, index) in myHand"
+            :key="index"
+            class="card-wrapper"
+            :class="{ 
+              selected: selectedCardIndex === index,
+              disabled: !isMyTurn
+            }"
+            @click="selectCard(index)"
+          >
+            <div
+              class="card"
+              :class="getCardColorClass(card)"
+            >
+              <div class="card-display">{{ getCardDisplay(card) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Controls -->
+      <div class="game-controls">
+        <button
+          @click="handlePlayCard"
+          class="btn btn-play"
+          :disabled="selectedCardIndex === null || !isMyTurn"
+        >
+          Play Card
+        </button>
+        <button 
+          @click="handleDrawCard" 
+          class="btn btn-draw" 
+          :disabled="!isMyTurn"
+        >
+          Draw Card
+        </button>
+        <button
+          @click="handleSayUno"
+          class="btn btn-uno"
+          :disabled="!canSayUno"
+        >
+          UNO!
+        </button>
+      </div>
+
+      <!-- Color Picker Modal -->
+      <div
+        v-if="showColorPicker"
+        class="color-picker-overlay"
+        @click="showColorPicker = false"
+      >
+        <div class="color-picker" @click.stop>
+          <h3>Choose a color</h3>
+          <div class="colors">
+            <button
+              @click="handleColorSelection('RED')"
+              class="color-button RED"
+            >
+              Red
+            </button>
+            <button
+              @click="handleColorSelection('BLUE')"
+              class="color-button BLUE"
+            >
+              Blue
+            </button>
+            <button
+              @click="handleColorSelection('GREEN')"
+              class="color-button GREEN"
+            >
+              Green
+            </button>
+            <button
+              @click="handleColorSelection('YELLOW')"
+              class="color-button YELLOW"
+            >
+              Yellow
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -338,172 +504,6 @@ onBeforeUnmount(() => {
   }
 })
 </script>
-
-<template>
-  <div class="game-view">
-    <!-- Loading State -->
-    <div v-if="gameStore.loading" class="loading-overlay">
-      <div class="spinner-large"></div>
-      <p>Loading game...</p>
-    </div>
-
-    <!-- Game Content -->
-    <div v-else-if="gameStore.game" class="game-content">
-      <!-- Notifications -->
-      <TransitionGroup name="notification" tag="div" class="notifications">
-        <div
-          v-for="(notification, index) in notifications"
-          :key="index"
-          class="notification"
-        >
-          {{ notification }}
-        </div>
-      </TransitionGroup>
-
-      <!-- Game Header -->
-      <div class="game-header">
-        <h1>UNO Game</h1>
-        <div class="header-info">
-          <div>
-            <span class="label">Current Player:</span>
-            <span class="value">{{ currentPlayerName }}</span>
-          </div>
-          <div>
-            <span class="label">Your Cards:</span>
-            <span class="value">{{ myHand.length }}</span>
-          </div>
-        </div>
-        <button @click="leaveGame" class="btn-danger">Leave Game</button>
-      </div>
-
-      <!-- Other Players -->
-      <div class="other-players">
-        <div
-          v-for="player in otherPlayers"
-          :key="player"
-          class="player-card"
-          :class="{ current: isCurrentPlayer(player) }"
-        >
-          <div class="player-name">{{ player }}</div>
-          <div class="card-count">🃏 {{ getPlayerCardCount(player) }}</div>
-        </div>
-      </div>
-
-      <!-- Game Board -->
-      <div class="game-board">
-        <!-- Draw Pile -->
-        <div class="pile">
-          <div 
-            class="card-back" 
-            @click="handleDrawCard"
-            :class="{ disabled: !isMyTurn }"
-          >
-            <span class="pile-label">Draw</span>
-            <span class="card-count">{{ drawPileCount }}</span>
-          </div>
-        </div>
-
-        <!-- Discard Pile -->
-        <div class="pile">
-          <div
-            v-if="topCard"
-            class="card discard-card"
-            :class="getCardColorClass(topCard)"
-          >
-            <div class="card-display">{{ getCardDisplay(topCard) }}</div>
-          </div>
-          <div v-else class="empty-pile">No cards</div>
-        </div>
-      </div>
-
-      <!-- Player Hand -->
-      <div class="player-hand-section">
-        <h3>Your Hand</h3>
-        <div class="player-hand">
-          <div
-            v-for="(card, index) in myHand"
-            :key="index"
-            class="card-wrapper"
-            :class="{ 
-              selected: selectedCardIndex === index,
-              disabled: !isMyTurn
-            }"
-            @click="selectCard(index)"
-          >
-            <div
-              class="card"
-              :class="getCardColorClass(card)"
-            >
-              <div class="card-display">{{ getCardDisplay(card) }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Game Controls -->
-      <div class="game-controls">
-        <button
-          @click="handlePlayCard"
-          class="btn btn-play"
-          :disabled="selectedCardIndex === null || !isMyTurn"
-        >
-          Play Card
-        </button>
-        <button 
-          @click="handleDrawCard" 
-          class="btn btn-draw" 
-          :disabled="!isMyTurn"
-        >
-          Draw Card
-        </button>
-        <button
-          @click="handleSayUno"
-          class="btn btn-uno"
-          :disabled="!canSayUno"
-        >
-          UNO!
-        </button>
-      </div>
-
-      <!-- Color Picker Modal -->
-      <div
-        v-if="showColorPicker"
-        class="color-picker-overlay"
-        @click="showColorPicker = false"
-      >
-        <div class="color-picker" @click.stop>
-          <h3>Choose a color</h3>
-          <div class="colors">
-            <button
-              @click="handleColorSelection('RED')"
-              class="color-button RED"
-            >
-              Red
-            </button>
-            <button
-              @click="handleColorSelection('BLUE')"
-              class="color-button BLUE"
-            >
-              Blue
-            </button>
-            <button
-              @click="handleColorSelection('GREEN')"
-              class="color-button GREEN"
-            >
-              Green
-            </button>
-            <button
-              @click="handleColorSelection('YELLOW')"
-              class="color-button YELLOW"
-            >
-              Yellow
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 .game-view {
