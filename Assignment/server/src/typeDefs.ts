@@ -40,7 +40,7 @@ export const typeDefs = gql`
   }
 
   type ActiveGame {
-    gameId: ID!
+    id: ID!
     players: [PlayerInfo!]!
     currentPlayerIndex: Int!
     currentPlayer: PlayerInfo!

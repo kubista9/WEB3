@@ -7,8 +7,8 @@ import { expressMiddleware } from '@apollo/server/express4';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { typeDefs } from './typeDefs';
-import { resolvers } from './resolvers';
 import { PubSub } from 'graphql-subscriptions';
+import { resolvers } from './resolvers'
 import 'dotenv/config';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default'
 import jwt from 'jsonwebtoken';
@@ -21,7 +21,7 @@ export const pubsub = new PubSub();
 async function startServer() {
   console.log('Starting server...');
   console.log('MongoDB URI:', MONGODB_URI);
-  
+
   const app = express();
   const httpServer = http.createServer(app);
 
@@ -41,9 +41,8 @@ async function startServer() {
     plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
   })
 
-  console.log('Starting Apollo Server...');
   await server.start();
-  console.log('✅ Apollo Server started');
+  console.log('Apollo Server started');
 
   const wsServer = new WebSocketServer({ server: httpServer, path: '/graphql' });
 
@@ -58,7 +57,7 @@ async function startServer() {
   console.log('Setting up middleware...');
   app.use(
     '/graphql',
-    cors({ 
+    cors({
       origin: 'http://localhost:5173',
       credentials: true,
     }),
@@ -67,7 +66,7 @@ async function startServer() {
       context: async ({ req }) => {
         const token = req.headers.authorization?.replace('Bearer ', '');
         let userId: string | null = null;
-        
+
         if (token) {
           try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretkey') as any;
@@ -76,7 +75,7 @@ async function startServer() {
             console.error('Invalid token:', err);
           }
         }
-        
+
         return { userId, pubsub };
       },
     })

@@ -103,8 +103,8 @@ export const lobbyService = {
   },
 
   async startGame(gameId: string) {
-  const { data } = await apolloClient.mutate({
-    mutation: gql`
+    const { data } = await apolloClient.mutate({
+      mutation: gql`
       mutation StartGame($input: StartGameInput!) {
         startGame(input: $input) {
           gameId
@@ -118,12 +118,12 @@ export const lobbyService = {
         }
       }
     `,
-    variables: {
-      input: { gameId }
-    }
-  })
-  return data.startGame
-}
+      variables: {
+        input: { gameId }
+      }
+    })
+    return data.startGame
+  }
 }
 
 export const gameService = {
@@ -202,6 +202,4 @@ export const gameService = {
       error: (err) => console.error('Subscription error:', err)
     })
   },
-
-  
 }

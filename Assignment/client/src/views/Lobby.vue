@@ -142,7 +142,6 @@
   </div>
 </template>
 
-// SCRIPT:
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -251,7 +250,7 @@ async function handleStartGame(gameId: string) {
     gameStore.setGame(result)
 
     // Redirect to game page
-    await router.push(`/game/${result.gameId}`)
+    await router.push(`/game/${result.id}`)
   } catch (error: any) {
     console.error('Failed to start game:', error)
     alert('Failed to start game: ' + error.message)

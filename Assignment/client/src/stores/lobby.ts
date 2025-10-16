@@ -49,12 +49,8 @@ const JOIN_GAME = gql`
 const START_GAME = gql`
   mutation StartGame($input: StartGameInput!) {
     startGame(input: $input) {
-      gameId
+      id
       players {
-        id
-        username
-      }
-      currentPlayer {
         id
         username
       }
@@ -79,6 +75,7 @@ const START_GAME = gql`
     }
   }
 `
+
 
 export const useLobbyStore = defineStore('lobby', () => {
   const availableGames = ref<any[]>([])

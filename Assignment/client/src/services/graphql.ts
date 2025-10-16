@@ -1,6 +1,5 @@
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client/core'
 import { setContext } from '@apollo/client/link/context'
-import { useAuthStore } from '@/stores/auth'
 
 const httpLink = new HttpLink({
   uri: 'http://localhost:4000/graphql',
@@ -8,9 +7,8 @@ const httpLink = new HttpLink({
 })
 
 const authLink = setContext((_, { headers }) => {
-  const authStore = useAuthStore()
-  const token = authStore.token
-  
+  const token = localStorage.getItem('token')
+
   return {
     headers: {
       ...headers,
@@ -19,9 +17,7 @@ const authLink = setContext((_, { headers }) => {
   }
 })
 
-const apolloClient = new ApolloClient({
+export const apolloClient = new ApolloClient({
   link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
 })
-
-export { apolloClient }

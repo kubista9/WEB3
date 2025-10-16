@@ -12,42 +12,43 @@ export const useGameStore = defineStore('game', () => {
     try {
       const { data } = await apolloClient.query({
         query: gql`
-          query GetActiveGame($id: ID!) {
-            activeGame(id: $id) {
-              gameId
-              players {
-                id
-                username
-              }
-              currentPlayerIndex
-              currentPlayer {
-                id
-                username
-              }
-              discardPile {
-                type
-                color
-                number
-              }
-              drawPileSize
-              playerHands {
-                playerId
-                username
-                cardCount
-                hand {
-                  type
-                  color
-                  number
-                }
-              }
-              gameStatus
-            }
+    query GetActiveGame($id: ID!) {
+      activeGame(id: $id) {
+        id
+        players {
+          id
+          username
+        }
+        currentPlayerIndex
+        currentPlayer {
+          id
+          username
+        }
+        discardPile {
+          type
+          color
+          number
+        }
+        drawPileSize
+        playerHands {
+          playerId
+          username
+          cardCount
+          hand {
+            type
+            color
+            number
           }
-        `,
+        }
+        gameStatus
+      }
+    }
+  `,
         variables: { id: gameId },
         fetchPolicy: 'network-only'
       })
-      
+
+
       game.value = data.activeGame
       return data.activeGame
     } catch (error) {
