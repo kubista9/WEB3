@@ -136,7 +136,6 @@ async function handleSubmit() {
 <style scoped>
 .auth-view {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -149,8 +148,6 @@ async function handleSubmit() {
 }
 
 .auth-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
   border-radius: 1.5rem;
   padding: 3rem;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -163,14 +160,12 @@ async function handleSubmit() {
 
 .auth-title {
   font-size: 2rem;
-  font-weight: 800;
   color: #1f2937;
   margin-bottom: 0.5rem;
 }
 
 .auth-subtitle {
   color: #6b7280;
-  font-size: 1rem;
 }
 
 .auth-form {
@@ -183,14 +178,6 @@ async function handleSubmit() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.form-label {
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .form-input {
@@ -212,8 +199,6 @@ async function handleSubmit() {
   background: #fee2e2;
   color: #dc2626;
   padding: 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
   text-align: center;
 }
 
@@ -243,21 +228,6 @@ async function handleSubmit() {
   cursor: not-allowed;
 }
 
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .auth-footer {
   margin-top: 2rem;
   text-align: center;
@@ -276,9 +246,5 @@ async function handleSubmit() {
   cursor: pointer;
   text-decoration: underline;
   margin-left: 0.25rem;
-}
-
-.toggle-button:hover {
-  color: #764ba2;
 }
 </style>

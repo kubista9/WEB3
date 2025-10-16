@@ -202,7 +202,6 @@ function backToLobby() {
   font-size: 2rem;
   font-weight: 700;
   background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0 0 3rem 0;
 }

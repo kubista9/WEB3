@@ -278,7 +278,7 @@ function canJoin(game: any) {
 <style scoped>
 .lobby-view {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: grey;
   padding: 2rem;
 }
 
@@ -321,11 +321,6 @@ function canJoin(game: any) {
   border-radius: 0.5rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-logout:hover {
-  background: rgba(220, 38, 38, 0.9);
 }
 
 .lobby-content {
@@ -445,30 +440,12 @@ function canJoin(game: any) {
   font-size: 1.5rem;
 }
 
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: #6b7280;
-}
-
-.spinner-large {
-  width: 50px;
-  height: 50px;
-  border: 4px solid #e5e7eb;
-  border-top-color: #667eea;
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  animation: spin 1s linear infinite;
-}
-
 .empty-icon {
   font-size: 4rem;
   margin-bottom: 1rem;
 }
 
 .empty-subtitle {
-  font-size: 0.875rem;
   margin-top: 0.5rem;
 }
 
@@ -543,7 +520,6 @@ function canJoin(game: any) {
 .info-item {
   display: flex;
   justify-content: space-between;
-  font-size: 0.875rem;
 }
 
 .info-label {
@@ -566,9 +542,4 @@ function canJoin(game: any) {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 }
 
-@media (max-width: 1024px) {
-  .lobby-content {
-    grid-template-columns: 1fr;
-  }
-}
 </style>
