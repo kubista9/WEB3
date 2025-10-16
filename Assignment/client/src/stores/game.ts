@@ -44,6 +44,7 @@ export const useGameStore = defineStore('game', () => {
       }
     }
   `,
+
         variables: { id: gameId },
         fetchPolicy: 'network-only'
       })

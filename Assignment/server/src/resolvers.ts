@@ -145,26 +145,41 @@ export const resolvers: IResolvers = {
 
 
     playCard: async (_: any, { input }: any, context: any) => {
-      if (!context.userId) throw new Error('Authentication required')
-      const { gameId, cardIndex, chosenColor } = input
+  if (!context.userId) throw new Error('Authentication required')
+  const { gameId, cardIndex, chosenColor } = input
 
-      const game = await ActiveGame.findById(gameId)
-      if (!game) throw new Error('Game not found')
+  const game = await ActiveGame.findById(gameId)
+  if (!game) throw new Error('Game not found')
 
-      // Basic logic placeholder — you can add UNO logic here
-      game.discardPile.unshift({
-        color: chosenColor || 'RED',
-        value: 'NUMBER',
-      })
+  const playerHand = game.playerHands.find(
+    (p: any) => p.username === context.userId
+  )
+  if (!playerHand) throw new Error('Player not found in this game')
 
-      game.currentPlayerIndex =
-        (game.currentPlayerIndex + game.direction + game.players.length) %
-        game.players.length
+  // Validate card index
+  if (cardIndex < 0 || cardIndex >= playerHand.hand.length)
+    throw new Error('Invalid card index')
 
-      await game.save()
-      await pubsub.publish(GAME_UPDATED, { gameUpdated: game })
-      return game
-    },
+  const playedCard = playerHand.hand.splice(cardIndex, 1)[0]
+
+  // Handle WILD color selection
+  if (playedCard.value === 'WILD' || playedCard.value === 'WILD_DRAW_FOUR') {
+    playedCard.color = chosenColor || 'RED'
+  }
+
+  // Add played card to top of discard pile
+  game.discardPile.unshift(playedCard)
+
+  // Move to next player
+  game.currentPlayerIndex =
+    (game.currentPlayerIndex + game.direction + game.players.length) %
+    game.players.length
+
+  await game.save()
+  await pubsub.publish(GAME_UPDATED, { gameUpdated: game })
+  return game
+},
+
 
     drawCard: async (_: any, { gameId }: any, context: any) => {
       if (!context.userId) throw new Error('Authentication required')

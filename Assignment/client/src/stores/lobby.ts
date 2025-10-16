@@ -76,7 +76,6 @@ const START_GAME = gql`
   }
 `
 
-
 export const useLobbyStore = defineStore('lobby', () => {
   const availableGames = ref<any[]>([])
   const loading = ref(false)

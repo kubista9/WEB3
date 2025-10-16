@@ -188,7 +188,7 @@ let subscription: any = null
 const PLAY_CARD = gql`
   mutation PlayCard($input: PlayCardInput!) {
     playCard(input: $input) {
-      gameId
+      id
       currentPlayer {
         username
       }
@@ -210,6 +210,7 @@ const PLAY_CARD = gql`
     }
   }
 `
+
 
 const DRAW_CARD = gql`
   mutation DrawCard($gameId: ID!) {

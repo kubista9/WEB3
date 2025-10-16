@@ -37,7 +37,7 @@ export interface IActiveGame extends Document {
   discardPile: ICard[];
   drawPile: ICard[];
   playerHands: Array<{
-    playerId: string; 
+    playerId: string;
     username: string;
     hand: ICard[];
   }>;
@@ -173,7 +173,7 @@ const activeGameSchema = new Schema<IActiveGame>(
       },
     ],
     gameStatus: { type: String, enum: ['active', 'finished'], default: 'active' },
-    gameMemento: { type: Schema.Types.Mixed, required: true },
+    gameMemento: { type: Schema.Types.Mixed, required: false },
     pendingGameId: { type: Schema.Types.ObjectId, ref: 'PendingGame' },
     moves: [{ type: Schema.Types.ObjectId, ref: 'Move' }],
     createdAt: { type: Date, default: Date.now },
