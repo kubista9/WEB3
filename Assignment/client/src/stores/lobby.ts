@@ -1,36 +1,154 @@
+// stores/lobby.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { lobbyService } from '@/services/api'
+import { apolloClient } from '@/services/graphql'
+import { gql } from '@apollo/client/core'
+
+const GET_PENDING_GAMES = gql`
+  query GetPendingGames {
+    pendingGames {
+      id
+      creatorId
+      creatorUsername
+      players {
+        id
+        username
+      }
+      maxPlayers
+      createdAt
+    }
+  }
+`
+
+const CREATE_GAME = gql`
+  mutation CreateGame($input: CreateGameInput!) {
+    createGame(input: $input) {
+      id
+      creatorUsername
+      players {
+        id
+        username
+      }
+      maxPlayers
+    }
+  }
+`
+
+const JOIN_GAME = gql`
+  mutation JoinGame($input: JoinGameInput!) {
+    joinGame(input: $input) {
+      id
+      players {
+        id
+        username
+      }
+    }
+  }
+`
+
+const START_GAME = gql`
+  mutation StartGame($input: StartGameInput!) {
+    startGame(input: $input) {
+      gameId
+      players {
+        id
+        username
+      }
+      currentPlayer {
+        id
+        username
+      }
+      currentPlayerIndex
+      discardPile {
+        type
+        color
+        number
+      }
+      drawPileSize
+      playerHands {
+        playerId
+        username
+        cardCount
+        hand {
+          type
+          color
+          number
+        }
+      }
+      gameStatus
+    }
+  }
+`
 
 export const useLobbyStore = defineStore('lobby', () => {
   const availableGames = ref<any[]>([])
-  const currentGame = ref<any | null>(null)
+  const loading = ref(false)
 
   async function fetchGames() {
-    availableGames.value = await lobbyService.getGames()
+    try {
+      const { data } = await apolloClient.query({
+        query: GET_PENDING_GAMES,
+        fetchPolicy: 'network-only'
+      })
+      availableGames.value = data.pendingGames || []
+    } catch (error) {
+      console.error('Failed to fetch games:', error)
+      throw error
+    }
   }
 
   async function createGame(name: string, maxPlayers: number) {
-    const game = await lobbyService.createGame(name, maxPlayers)
-    currentGame.value = game
-    return game
+    try {
+      const { data } = await apolloClient.mutate({
+        mutation: CREATE_GAME,
+        variables: {
+          input: { maxPlayers }
+        }
+      })
+      await fetchGames()
+      return data.createGame
+    } catch (error) {
+      console.error('Failed to create game:', error)
+      throw error
+    }
   }
 
   async function joinGame(gameId: string) {
-    const game = await lobbyService.joinGame(gameId)
-    currentGame.value = game
-    return game
+    try {
+      const { data } = await apolloClient.mutate({
+        mutation: JOIN_GAME,
+        variables: {
+          input: { gameId }
+        }
+      })
+      await fetchGames()
+      return data.joinGame
+    } catch (error) {
+      console.error('Failed to join game:', error)
+      throw error
+    }
   }
 
   async function startGame(gameId: string) {
-    const game = await lobbyService.startGame(gameId)
-    currentGame.value = game
-    return game
+    try {
+      console.log('Starting game with ID:', gameId)
+      const { data } = await apolloClient.mutate({
+        mutation: START_GAME,
+        variables: {
+          input: { gameId }
+        }
+      })
+      console.log('Game started, received data:', data.startGame)
+      return data.startGame
+    } catch (error) {
+      console.error('Failed to start game:', error)
+      throw error
+    }
   }
 
   return {
     availableGames,
-    currentGame,
+    loading,
     fetchGames,
     createGame,
     joinGame,
