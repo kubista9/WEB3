@@ -98,31 +98,51 @@ export const resolvers: IResolvers = {
         throw new Error('Only the host can start the game')
       }
 
+      // Build full UNO deck (simple 0–9 colored cards for now)
+      const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW']
+      const deck: { color: string; value: string }[] = []
+
+      for (const color of colors) {
+        for (let n = 0; n <= 9; n++) deck.push({ color, value: n.toString() })
+        // You could later add SKIP, REVERSE, DRAW_TWO, WILD, WILD_DRAW_FOUR, etc.
+      }
+
+      // Shuffle deck
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+          ;[deck[i], deck[j]] = [deck[j], deck[i]]
+      }
+
+      // Deal 7 cards to each player
+      const playerHands = pendingGame.players.map(p => {
+        const hand = deck.splice(0, 7)
+        return { playerId: p.username, username: p.username, hand }
+      })
+
+      // Set starting discard pile and remaining draw pile
+      const discardPile = [deck.shift()!]
+      const drawPile = deck
+
       const activeGame = new ActiveGame({
-        _id: new mongoose.Types.ObjectId(),
         players: pendingGame.players,
         currentPlayerIndex: 0,
         direction: 1,
-        discardPile: [],
-        drawPile: [],
-        playerHands: pendingGame.players.map(p => ({
-          playerId: p.username,
-          username: p.username,
-          hand: [],
-        })),
+        discardPile,
+        drawPile,
+        playerHands,
         gameStatus: 'active',
         gameMemento: {},
         pendingGameId: pendingGame._id,
         moves: [],
       })
 
-
       await activeGame.save()
       await PendingGame.findByIdAndDelete(input.gameId)
+
       await pubsub.publish(GAME_UPDATED, { gameUpdated: activeGame })
       return activeGame
-
     },
+
 
     playCard: async (_: any, { input }: any, context: any) => {
       if (!context.userId) throw new Error('Authentication required')
@@ -235,10 +255,38 @@ export const resolvers: IResolvers = {
   Subscription: {
     gameUpdated: {
       subscribe: (_: any, { gameId }: { gameId: string }) => {
-        console.log('Subscribed to game:', gameId)
-        return pubsub.asyncIterator(GAME_UPDATED)
+        const asyncIterator = pubsub.asyncIterator<{ gameUpdated: any }>(GAME_UPDATED)
+
+        return {
+          async next() {
+            while (true) {
+              const { value, done } = await asyncIterator.next()
+              if (done) return { value, done }
+
+              const updatedGame = value?.gameUpdated
+              if (updatedGame && updatedGame._id?.toString() === gameId) {
+                return { value, done: false }
+              }
+            }
+          },
+          return() {
+            return asyncIterator.return
+              ? asyncIterator.return()
+              : Promise.resolve({ done: true, value: undefined })
+          },
+          throw(error: any) {
+            return asyncIterator.throw
+              ? asyncIterator.throw(error)
+              : Promise.reject(error)
+          },
+          [Symbol.asyncIterator]() {
+            return this
+          },
+        }
       },
     },
+
+
 
     pendingGameUpdated: {
       subscribe: (_: any) => pubsub.asyncIterator(PENDING_GAME_UPDATED),

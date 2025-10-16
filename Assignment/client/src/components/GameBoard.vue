@@ -64,20 +64,6 @@
         <div class="pile-count">{{ discardCount }} cards</div>
       </div>
     </div>
-
-    <!-- Game Stats Bar -->
-    <div class="game-stats-bar">
-      <div class="stat-item">
-        <span class="stat-icon">🎴</span>
-        <span class="stat-value">{{ totalCardsInPlay }}</span>
-        <span class="stat-label">Cards in Play</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-icon">🔄</span>
-        <span class="stat-value">{{ turnCount }}</span>
-        <span class="stat-label">Turns</span>
-      </div>
-    </div>
   </div>
 </template>
 

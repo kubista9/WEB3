@@ -67,6 +67,3 @@ const showIcon = computed(() => {
   return ['SKIP', 'REVERSE', 'DRAW CARD', 'WILD CARD', 'WILD DRAW'].includes(props.topCard.type)
 })
 </script>
-
-<style scoped>
-</style>
