@@ -15,13 +15,11 @@ import jwt from 'jsonwebtoken';
 
 const PORT = 4000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/uno-game';
-
 export const pubsub = new PubSub();
 
 async function startServer() {
   console.log('Starting server...');
   console.log('MongoDB URI:', MONGODB_URI);
-
   const app = express();
   const httpServer = http.createServer(app);
 
@@ -43,7 +41,6 @@ async function startServer() {
 
   await server.start();
   console.log('Apollo Server started');
-
   const wsServer = new WebSocketServer({ server: httpServer, path: '/graphql' });
 
   useServer(

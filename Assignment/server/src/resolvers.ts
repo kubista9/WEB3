@@ -1,11 +1,9 @@
 import { IResolvers } from '@graphql-tools/utils'
-import { PubSub } from 'graphql-subscriptions'
 import { PendingGame, ActiveGame, Move } from './models'
 import { pubsub } from './server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { UserModel, Player } from './models'
-import mongoose from 'mongoose'
 import 'dotenv/config'
 
 const GAME_UPDATED = 'GAME_UPDATED'
@@ -14,9 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey'
 
 
 export const resolvers: IResolvers = {
-  // ---------------------
   // QUERIES
-  // ---------------------
   Query: {
     pendingGames: async () => {
       try {
@@ -39,9 +35,7 @@ export const resolvers: IResolvers = {
     },
   },
 
-  // ---------------------
   // MUTATIONS
-  // ---------------------
   Mutation: {
     createGame: async (_: any, { input }: any, context: any) => {
       if (!context.userId) throw new Error('Authentication required')
@@ -98,28 +92,23 @@ export const resolvers: IResolvers = {
         throw new Error('Only the host can start the game')
       }
 
-      // Build full UNO deck (simple 0–9 colored cards for now)
       const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW']
       const deck: { color: string; value: string }[] = []
 
       for (const color of colors) {
         for (let n = 0; n <= 9; n++) deck.push({ color, value: n.toString() })
-        // You could later add SKIP, REVERSE, DRAW_TWO, WILD, WILD_DRAW_FOUR, etc.
       }
 
-      // Shuffle deck
       for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
           ;[deck[i], deck[j]] = [deck[j], deck[i]]
       }
 
-      // Deal 7 cards to each player
       const playerHands = pendingGame.players.map(p => {
         const hand = deck.splice(0, 7)
         return { playerId: p.username, username: p.username, hand }
       })
 
-      // Set starting discard pile and remaining draw pile
       const discardPile = [deck.shift()!]
       const drawPile = deck
 
@@ -145,40 +134,35 @@ export const resolvers: IResolvers = {
 
 
     playCard: async (_: any, { input }: any, context: any) => {
-  if (!context.userId) throw new Error('Authentication required')
-  const { gameId, cardIndex, chosenColor } = input
+      if (!context.userId) throw new Error('Authentication required')
+      const { gameId, cardIndex, chosenColor } = input
 
-  const game = await ActiveGame.findById(gameId)
-  if (!game) throw new Error('Game not found')
+      const game = await ActiveGame.findById(gameId)
+      if (!game) throw new Error('Game not found')
 
-  const playerHand = game.playerHands.find(
-    (p: any) => p.username === context.userId
-  )
-  if (!playerHand) throw new Error('Player not found in this game')
+      const playerHand = game.playerHands.find(
+        (p: any) => p.username === context.userId
+      )
+      if (!playerHand) throw new Error('Player not found in this game')
 
-  // Validate card index
-  if (cardIndex < 0 || cardIndex >= playerHand.hand.length)
-    throw new Error('Invalid card index')
+      if (cardIndex < 0 || cardIndex >= playerHand.hand.length)
+        throw new Error('Invalid card index')
 
-  const playedCard = playerHand.hand.splice(cardIndex, 1)[0]
+      const playedCard = playerHand.hand.splice(cardIndex, 1)[0]
 
-  // Handle WILD color selection
-  if (playedCard.value === 'WILD' || playedCard.value === 'WILD_DRAW_FOUR') {
-    playedCard.color = chosenColor || 'RED'
-  }
+      if (playedCard.value === 'WILD' || playedCard.value === 'WILD_DRAW_FOUR') {
+        playedCard.color = chosenColor || 'RED'
+      }
+      game.discardPile.unshift(playedCard)
 
-  // Add played card to top of discard pile
-  game.discardPile.unshift(playedCard)
+      game.currentPlayerIndex =
+        (game.currentPlayerIndex + game.direction + game.players.length) %
+        game.players.length
 
-  // Move to next player
-  game.currentPlayerIndex =
-    (game.currentPlayerIndex + game.direction + game.players.length) %
-    game.players.length
-
-  await game.save()
-  await pubsub.publish(GAME_UPDATED, { gameUpdated: game })
-  return game
-},
+      await game.save()
+      await pubsub.publish(GAME_UPDATED, { gameUpdated: game })
+      return game
+    },
 
 
     drawCard: async (_: any, { gameId }: any, context: any) => {
@@ -186,7 +170,6 @@ export const resolvers: IResolvers = {
       const game = await ActiveGame.findById(gameId)
       if (!game) throw new Error('Game not found')
 
-      // Add a mock card to player's hand
       const playerHand = game.playerHands.find(
         (p: any) => p.username === context.userId
       )
@@ -222,24 +205,14 @@ export const resolvers: IResolvers = {
     },
     register: async (_: any, { username, password }: any) => {
       try {
-        // Check if user already exists
         const existingUser = await UserModel.findOne({ username })
         if (existingUser) throw new Error('Username already taken')
-
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10)
-
-        // Create user
         const user = new UserModel({ username, password: hashedPassword })
         await user.save()
-
-        // Also create Player entry
         const player = new Player({ username })
         await player.save()
-
-        // Create JWT token
         const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '7d' })
-
         return { token, user: { id: user._id, username: user.username } }
       } catch (err) {
         console.error('Register error:', err)
@@ -264,9 +237,7 @@ export const resolvers: IResolvers = {
 
   },
 
-  // ---------------------
   // SUBSCRIPTIONS
-  // ---------------------
   Subscription: {
     gameUpdated: {
       subscribe: (_: any, { gameId }: { gameId: string }) => {
@@ -300,28 +271,19 @@ export const resolvers: IResolvers = {
         }
       },
     },
-
-
-
     pendingGameUpdated: {
       subscribe: (_: any) => pubsub.asyncIterator(PENDING_GAME_UPDATED),
     },
   },
 
-  //for active game
-
   ActiveGame: {
-    // Convert Mongo _id → GraphQL id
     id: (game: any) => game._id?.toString(),
-
-    // Map player list (they only have username in DB)
     players: (game: any) =>
       (game.players || []).map((p: any) => ({
         id: p.username,
         username: p.username,
       })),
 
-    // Compute current player info
     currentPlayer: (game: any) => {
       const player = game.players?.[game.currentPlayerIndex];
       return player
@@ -329,7 +291,6 @@ export const resolvers: IResolvers = {
         : { id: '', username: '' };
     },
 
-    // You can later populate this if you have a concept of dealer
     dealer: (game: any) => {
       const dealer = game.players?.[0];
       return dealer
@@ -337,7 +298,6 @@ export const resolvers: IResolvers = {
         : { id: '', username: '' };
     },
 
-    // Map discard pile (convert DB { color, value } → GraphQL { type, color, number })
     discardPile: (game: any) =>
       (game.discardPile || []).map((c: any) => ({
         type: mapCardType(c.value),
@@ -345,11 +305,9 @@ export const resolvers: IResolvers = {
         number: parseInt(c.value, 10) || null,
       })),
 
-    // ✅ Always return a valid integer for draw pile size
     drawPileSize: (game: any) =>
       Array.isArray(game.drawPile) ? game.drawPile.length : 0,
 
-    // Compute each player's hand & card count
     playerHands: (game: any) =>
       (game.playerHands || []).map((h: any) => ({
         playerId: h.playerId,
@@ -362,7 +320,6 @@ export const resolvers: IResolvers = {
         })),
       })),
 
-    // Handle optional fields safely
     winner: (game: any) =>
       game.winner
         ? { id: game.winner.username, username: game.winner.username }
