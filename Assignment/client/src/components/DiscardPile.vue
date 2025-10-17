@@ -3,7 +3,6 @@
     <div v-if="topCard" class="top-card" :class="cardColorClass">
       <div class="card-content">
         <div class="card-value">{{ cardDisplay }}</div>
-        <div v-if="showIcon" class="card-icon">{{ cardIcon }}</div>
       </div>
       <div v-if="'color' in topCard" class="card-color-corner top-left">
         {{ cardDisplay }}
@@ -47,19 +46,6 @@ const cardDisplay = computed(() => {
   if (card.type === 'WILD DRAW') return '+4'
   
   return '?'
-})
-
-const cardIcon = computed(() => {
-  if (!props.topCard) return ''
-  const card = props.topCard
-  
-  if (card.type === 'SKIP') return '🚫'
-  if (card.type === 'REVERSE') return '🔄'
-  if (card.type === 'DRAW CARD') return '📥'
-  if (card.type === 'WILD CARD') return '🌈'
-  if (card.type === 'WILD DRAW') return '⚡'
-  
-  return ''
 })
 
 const showIcon = computed(() => {

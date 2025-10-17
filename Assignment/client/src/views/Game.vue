@@ -71,9 +71,15 @@
           >
             <div class="card-display">{{ getCardDisplay(topCard) }}</div>
           </div>
+          
           <div v-else class="empty-pile">No cards</div>
         </div>
       </div>
+
+      <DiscardPile :top-card="topCard" />
+      <p style="color:white">DEBUG topCard: {{ topCard }}</p>
+
+
 
       <!-- Player Hand -->
       <div class="player-hand-section">
@@ -189,36 +195,17 @@ const PLAY_CARD = gql`
   mutation PlayCard($input: PlayCardInput!) {
     playCard(input: $input) {
       id
+      currentPlayerIndex
       currentPlayer {
+        id
         username
-      }
-      playerHands {
-        playerId
-        username
-        cardCount
-        hand {
-          type
-          color
-          number
-        }
       }
       discardPile {
         type
         color
         number
       }
-    }
-  }
-`
-
-
-const DRAW_CARD = gql`
-  mutation DrawCard($gameId: ID!) {
-    drawCard(gameId: $gameId) {
-      gameId
-      currentPlayer {
-        username
-      }
+      drawPileSize
       playerHands {
         playerId
         username
@@ -229,6 +216,37 @@ const DRAW_CARD = gql`
           number
         }
       }
+      gameStatus
+    }
+  }
+`
+
+const DRAW_CARD = gql`
+  mutation DrawCard($gameId: ID!) {
+    drawCard(gameId: $gameId) {
+      id
+      currentPlayerIndex
+      currentPlayer {
+        id
+        username
+      }
+      discardPile {
+        type
+        color
+        number
+      }
+      drawPileSize
+      playerHands {
+        playerId
+        username
+        cardCount
+        hand {
+          type
+          color
+          number
+        }
+      }
+      gameStatus
     }
   }
 `
@@ -236,7 +254,7 @@ const DRAW_CARD = gql`
 const GAME_SUBSCRIPTION = gql`
   subscription OnGameUpdated($gameId: ID!) {
     gameUpdated(gameId: $gameId) {
-      gameId
+      id
       players {
         id
         username
@@ -279,7 +297,7 @@ const myHand = computed(() => {
 
 const topCard = computed(() => {
   const game = gameStore.game
-  if (!game || !game.discardPile || game.discardPile.length === 0) return null
+  if (!game || !game.discardPile?.length) return null
   return game.discardPile[0]
 })
 
@@ -315,7 +333,6 @@ const canSayUno = computed(() => {
   return isMyTurn.value && myHand.value.length === 2
 })
 
-// Helper functions
 function getCardColorClass(card: any) {
   if (!card || !card.color) return 'WILD'
   return card.color.toUpperCase()
@@ -323,13 +340,10 @@ function getCardColorClass(card: any) {
 
 function getCardDisplay(card: any) {
   if (!card) return '?'
-  
-  // Handle NUMBER type
   if (card.type === 'NUMBER' && card.number !== undefined && card.number !== null) {
     return card.number.toString()
   }
   
-  // Handle other types
   switch(card.type) {
     case 'SKIP': return 'SKIP'
     case 'REVERSE': return '⇄'
@@ -340,7 +354,6 @@ function getCardDisplay(card: any) {
   }
 }
 
-// Setup subscription
 function setupSubscription() {
   console.log('Setting up subscription for game:', gameId)
   subscription = apolloClient
@@ -361,7 +374,6 @@ function setupSubscription() {
     })
 }
 
-// Card selection
 function selectCard(index: number) {
   if (!isMyTurn.value) {
     addNotification("It's not your turn!")
@@ -370,13 +382,11 @@ function selectCard(index: number) {
   selectedCardIndex.value = selectedCardIndex.value === index ? null : index
 }
 
-// Play card
 async function handlePlayCard() {
   if (selectedCardIndex.value === null || !isMyTurn.value) return
 
   const card = myHand.value[selectedCardIndex.value]
 
-  // Check if it's a wild card that needs color selection
   if (card.type === 'WILD' || card.type === 'WILD_DRAW_FOUR') {
     pendingCardIndex.value = selectedCardIndex.value
     showColorPicker.value = true
@@ -394,29 +404,41 @@ async function handleColorSelection(color: string) {
 
 async function playCard(cardIndex: number, chosenColor?: string) {
   try {
-    console.log('Playing card at index:', cardIndex, 'with color:', chosenColor)
-    
-    await apolloClient.mutate({
-      mutation: PLAY_CARD,
-      variables: {
-        input: {
-          gameId,
-          cardIndex,
-          saidUno: myHand.value.length === 2, // Auto-say UNO if we'll have 1 card left
-          chosenColor: chosenColor || null
-        }
-      }
-    })
-    
-    addNotification('Card played!')
+    const result = await apolloClient.mutate({
+  mutation: PLAY_CARD,
+  variables: {
+    input: {
+      gameId,
+      cardIndex,
+      saidUno: myHand.value.length === 2,
+      chosenColor: chosenColor || null
+    }
+  },
+  fetchPolicy: 'no-cache'
+})
+
+if (result.data?.playCard) {
+  gameStore.setGame(JSON.parse(JSON.stringify(result.data.playCard)))
+  addNotification('Card played!')
+}
+
+selectedCardIndex.value = null
+
+
+    if (result.data?.playCard) {
+      gameStore.setGame(result.data.playCard)
+      addNotification('Card played!')
+    }
+
     selectedCardIndex.value = null
+
   } catch (error: any) {
     console.error('Play card error:', error)
     addNotification('Failed to play card: ' + error.message)
   }
 }
 
-// Draw card
+
 async function handleDrawCard() {
   if (!isMyTurn.value) {
     addNotification("It's not your turn!")
@@ -426,19 +448,22 @@ async function handleDrawCard() {
   try {
     console.log('Drawing card for game:', gameId)
     
-    await apolloClient.mutate({
+    const result = await apolloClient.mutate({
       mutation: DRAW_CARD,
       variables: { gameId }
     })
     
-    addNotification('Card drawn!')
+    // Update local game state immediately
+    if (result.data?.drawCard) {
+      gameStore.setGame(result.data.drawCard)
+      addNotification('Card drawn!')
+    }
   } catch (error: any) {
     console.error('Draw card error:', error)
     addNotification('Failed to draw card: ' + error.message)
   }
 }
 
-// Say UNO
 async function handleSayUno() {
   if (!canSayUno.value) return
   
@@ -448,7 +473,6 @@ async function handleSayUno() {
     )
     if (myPlayerIndex === undefined || myPlayerIndex === -1) return
     
-    // You'll need to implement this mutation if it's not already there
     addNotification('UNO!')
   } catch (error: any) {
     addNotification('Failed: ' + error.message)
@@ -485,19 +509,11 @@ function leaveGame() {
 
 onMounted(async () => {
   console.log('Game component mounted, gameId:', gameId)
-  try {
-    // Fetch initial game state
-    await gameStore.fetchGame(gameId)
-    console.log('Game loaded:', gameStore.game)
-    
-    // Setup real-time subscription
-    setupSubscription()
-  } catch (error) {
-    console.error('Failed to load game:', error)
-    alert('Failed to load game')
-    router.push('/lobby')
-  }
+  await gameStore.fetchGame(gameId)
+  console.log('Game loaded:', gameStore.game)
+  setupSubscription()
 })
+
 
 onBeforeUnmount(() => {
   if (subscription) {
