@@ -50,18 +50,6 @@
 
       <!-- Game Board -->
       <div class="game-board">
-        <!-- Draw Pile -->
-        <div class="pile">
-          <div 
-            class="card-back" 
-            @click="handleDrawCard"
-            :class="{ disabled: !isMyTurn }"
-          >
-            <span class="pile-label">Draw</span>
-            <span class="card-count">{{ drawPileCount }}</span>
-          </div>
-        </div>
-
         <!-- Discard Pile -->
         <div class="pile">
           <div
@@ -123,43 +111,6 @@
         >
           UNO!
         </button>
-      </div>
-
-      <!-- Color Picker Modal -->
-      <div
-        v-if="showColorPicker"
-        class="color-picker-overlay"
-        @click="showColorPicker = false"
-      >
-        <div class="color-picker" @click.stop>
-          <h3>Choose a color</h3>
-          <div class="colors">
-            <button
-              @click="handleColorSelection('RED')"
-              class="color-button RED"
-            >
-              Red
-            </button>
-            <button
-              @click="handleColorSelection('BLUE')"
-              class="color-button BLUE"
-            >
-              Blue
-            </button>
-            <button
-              @click="handleColorSelection('GREEN')"
-              class="color-button GREEN"
-            >
-              Green
-            </button>
-            <button
-              @click="handleColorSelection('YELLOW')"
-              class="color-button YELLOW"
-            >
-              Yellow
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -379,7 +330,6 @@ function selectCard(index: number) {
 
 async function handlePlayCard() {
   if (selectedCardIndex.value === null || !isMyTurn.value) return
-
   const card = myHand.value[selectedCardIndex.value]
 
   if (card.type === 'WILD' || card.type === 'WILD_DRAW_FOUR') {
@@ -418,15 +368,11 @@ if (result.data?.playCard) {
 }
 
 selectedCardIndex.value = null
-
-
     if (result.data?.playCard) {
       gameStore.setGame(result.data.playCard)
       addNotification('Card played!')
     }
-
     selectedCardIndex.value = null
-
   } catch (error: any) {
     console.error('Play card error:', error)
     addNotification('Failed to play card: ' + error.message)
@@ -442,13 +388,11 @@ async function handleDrawCard() {
   
   try {
     console.log('Drawing card for game:', gameId)
-    
     const result = await apolloClient.mutate({
       mutation: DRAW_CARD,
       variables: { gameId }
     })
     
-    // Update local game state immediately
     if (result.data?.drawCard) {
       gameStore.setGame(result.data.drawCard)
       addNotification('Card drawn!')
@@ -461,13 +405,11 @@ async function handleDrawCard() {
 
 async function handleSayUno() {
   if (!canSayUno.value) return
-  
   try {
     const myPlayerIndex = gameStore.game?.players.findIndex(
       (p: any) => p.username === authStore.user?.username
     )
     if (myPlayerIndex === undefined || myPlayerIndex === -1) return
-    
     addNotification('UNO!')
   } catch (error: any) {
     addNotification('Failed: ' + error.message)
@@ -521,7 +463,7 @@ onBeforeUnmount(() => {
 .game-view {
   min-height: 100vh;
   padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background:black;
 }
 
 .loading-overlay {
@@ -531,19 +473,6 @@ onBeforeUnmount(() => {
   justify-content: center;
   min-height: 100vh;
   color: white;
-}
-
-.spinner-large {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .notifications {
@@ -659,20 +588,6 @@ onBeforeUnmount(() => {
   color: white;
 }
 
-.card-back:not(.disabled):hover {
-  transform: scale(1.05);
-}
-
-.card-back.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pile-label {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-
 .empty-pile {
   width: 120px;
   height: 180px;
@@ -745,15 +660,6 @@ onBeforeUnmount(() => {
 .card-wrapper {
   cursor: pointer;
   transition: transform 0.2s;
-}
-
-.card-wrapper:not(.disabled):hover {
-  transform: translateY(-10px);
-}
-
-.card-wrapper.disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
 }
 
 .card-wrapper.selected {
@@ -834,70 +740,5 @@ onBeforeUnmount(() => {
 .btn-danger:hover {
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   transform: translateY(-2px);
-}
-
-.color-picker-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.color-picker {
-  background: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-}
-
-.color-picker h3 {
-  margin: 0 0 1.5rem 0;
-  color: #1f2937;
-}
-
-.colors {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.color-button {
-  width: 100px;
-  height: 100px;
-  border: none;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  font-weight: bold;
-  color: white;
-  transition: transform 0.2s;
-  font-size: 1rem;
-}
-
-.color-button:hover {
-  transform: scale(1.1);
-}
-
-.color-button.RED {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-}
-
-.color-button.BLUE {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-}
-
-.color-button.GREEN {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.color-button.YELLOW {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  color: #1f2937;
 }
 </style>

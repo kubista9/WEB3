@@ -204,7 +204,6 @@ async function createGame() {
       newGame.value.name,
       newGame.value.maxPlayers
     )
-    // Don't redirect immediately, wait for game to start
   } catch (error: any) {
     console.error('Failed to create game:', error)
     alert('Failed to create game: ' + error.message)
@@ -214,7 +213,6 @@ async function createGame() {
 async function joinGame(gameId: string) {
   try {
     await lobbyStore.joinGame(gameId)
-    // Refresh to see updated player list
     await refreshGames()
   } catch (error: any) {
     console.error('Failed to join game:', error)
@@ -232,8 +230,6 @@ async function handleStartGame(gameId: string) {
     console.log('Already starting game, ignoring...')
     return
   }
-
-  // Stop auto-refresh while starting
   if (refreshInterval.value) {
     clearInterval(refreshInterval.value)
     refreshInterval.value = null
@@ -245,16 +241,12 @@ async function handleStartGame(gameId: string) {
     console.log('Starting game:', gameId)
     const result = await lobbyStore.startGame(gameId)
     console.log('Game started, result:', result)
-
-    // Store the game in gameStore before redirecting
     gameStore.setGame(result)
 
-    // Redirect to game page
     await router.push(`/game/${result.id}`)
   } catch (error: any) {
     console.error('Failed to start game:', error)
     alert('Failed to start game: ' + error.message)
-    // Restart auto-refresh on error
     refreshInterval.value = setInterval(refreshGames, 5000)
   } finally {
     isStarting.value = false
@@ -277,7 +269,7 @@ function canJoin(game: any) {
 <style scoped>
 .lobby-view {
   min-height: 100vh;
-  background: grey;
+  background: black;
   padding: 2rem;
 }
 

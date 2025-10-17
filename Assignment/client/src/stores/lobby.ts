@@ -1,4 +1,3 @@
-// stores/lobby.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { apolloClient } from '@/services/graphql'

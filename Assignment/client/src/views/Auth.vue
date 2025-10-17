@@ -3,10 +3,7 @@
     <div class="auth-container">
       <div class="auth-card">
         <div class="auth-header">
-          <h1 class="auth-title">{{ isLogin ? 'Welcome Back!' : 'Join UNO Online' }}</h1>
-          <p class="auth-subtitle">
-            {{ isLogin ? 'Sign in to continue playing' : 'Create your account to start' }}
-          </p>
+          <h1 class="auth-title">Welcome!</h1>
         </div>
 
         <form @submit.prevent="handleSubmit" class="auth-form">
