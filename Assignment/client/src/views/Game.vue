@@ -76,11 +76,6 @@
         </div>
       </div>
 
-      <DiscardPile :top-card="topCard" />
-      <p style="color:white">DEBUG topCard: {{ topCard }}</p>
-
-
-
       <!-- Player Hand -->
       <div class="player-hand-section">
         <h3>Your Hand</h3>
