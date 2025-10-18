@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authService } from '@/services/api'
+import { jwtDecode } from 'jwt-decode'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<{ id: string; username: string } | null>(null)
@@ -28,5 +29,19 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('token')
   }
 
-  return { user, token, isAuthenticated, login, register, logout }
+  function loadUserFromToken() {
+    const storedToken = localStorage.getItem('token')
+    if (!storedToken) return
+    try {
+      const decoded: any = jwtDecode(storedToken)
+      user.value = { id: decoded.username, username: decoded.username }
+      token.value = storedToken
+      console.log('🔑 [AUTH] Restored user from token:', user.value)
+    } catch (err) {
+      console.error('❌ Failed to decode token:', err)
+      logout()
+    }
+  }
+
+  return { user, token, isAuthenticated, login, register, logout, loadUserFromToken }
 })

@@ -1,18 +1,18 @@
 import { IResolvers } from '@graphql-tools/utils'
-import { PendingGame, ActiveGame, Move } from './models'
+import { PendingGame, ActiveGame, Move, UserModel, Player } from './models'
 import { pubsub } from './server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { UserModel, Player } from './models'
 import 'dotenv/config'
 
 const GAME_UPDATED = 'GAME_UPDATED'
 const PENDING_GAME_UPDATED = 'PENDING_GAME_UPDATED'
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey'
 
-
 export const resolvers: IResolvers = {
-  // QUERIES
+  // =====================
+  // 🔹 QUERIES
+  // =====================
   Query: {
     pendingGames: async () => {
       try {
@@ -27,6 +27,15 @@ export const resolvers: IResolvers = {
       try {
         const game = await ActiveGame.findById(id)
         if (!game) throw new Error('Game not found')
+        console.log('🔍 [BACKEND] ActiveGame fetched:', {
+          id,
+          players: game.players.map(p => p.username),
+          playerHands: game.playerHands.map(p => ({
+            username: p.username,
+            cardCount: p.hand.length,
+          })),
+          discardTop: game.discardPile[0],
+        })
         return game
       } catch (err) {
         console.error('Error fetching active game:', err)
@@ -35,7 +44,9 @@ export const resolvers: IResolvers = {
     },
   },
 
-  // MUTATIONS
+  // =====================
+  // 🔹 MUTATIONS
+  // =====================
   Mutation: {
     createGame: async (_: any, { input }: any, context: any) => {
       if (!context.userId) throw new Error('Authentication required')
@@ -49,7 +60,6 @@ export const resolvers: IResolvers = {
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         })
         await newGame.save()
-
         await pubsub.publish(PENDING_GAME_UPDATED, { pendingGameUpdated: newGame })
         return newGame
       } catch (err) {
@@ -101,7 +111,7 @@ export const resolvers: IResolvers = {
 
       for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
-          ;[deck[i], deck[j]] = [deck[j], deck[i]]
+        ;[deck[i], deck[j]] = [deck[j], deck[i]]
       }
 
       const playerHands = pendingGame.players.map(p => {
@@ -126,12 +136,20 @@ export const resolvers: IResolvers = {
       })
 
       await activeGame.save()
-      await PendingGame.findByIdAndDelete(input.gameId)
 
+      console.log('🎮 [BACKEND] New ActiveGame created:', {
+        gameId: activeGame._id,
+        players: activeGame.players.map(p => p.username),
+        playerHands: activeGame.playerHands.map(h => ({
+          username: h.username,
+          hand: h.hand.map(c => `${c.color}-${c.value}`),
+        })),
+      })
+
+      await PendingGame.findByIdAndDelete(input.gameId)
       await pubsub.publish(GAME_UPDATED, { gameUpdated: activeGame })
       return activeGame
     },
-
 
     playCard: async (_: any, { input }: any, context: any) => {
       if (!context.userId) throw new Error('Authentication required')
@@ -153,8 +171,8 @@ export const resolvers: IResolvers = {
       if (playedCard.value === 'WILD' || playedCard.value === 'WILD_DRAW_FOUR') {
         playedCard.color = chosenColor || 'RED'
       }
-      game.discardPile.unshift(playedCard)
 
+      game.discardPile.unshift(playedCard)
       game.currentPlayerIndex =
         (game.currentPlayerIndex + game.direction + game.players.length) %
         game.players.length
@@ -163,7 +181,6 @@ export const resolvers: IResolvers = {
       await pubsub.publish(GAME_UPDATED, { gameUpdated: game })
       return game
     },
-
 
     drawCard: async (_: any, { gameId }: any, context: any) => {
       if (!context.userId) throw new Error('Authentication required')
@@ -203,6 +220,7 @@ export const resolvers: IResolvers = {
       await pubsub.publish(PENDING_GAME_UPDATED, { pendingGameUpdated: game })
       return true
     },
+
     register: async (_: any, { username, password }: any) => {
       try {
         const existingUser = await UserModel.findOne({ username })
@@ -219,6 +237,7 @@ export const resolvers: IResolvers = {
         throw new Error('Registration failed')
       }
     },
+
     login: async (_: any, { username, password }: any) => {
       try {
         const user = await UserModel.findOne({ username })
@@ -234,10 +253,11 @@ export const resolvers: IResolvers = {
         throw new Error('Login failed')
       }
     },
-
   },
 
-  // SUBSCRIPTIONS
+  // =====================
+  // 🔹 SUBSCRIPTIONS
+  // =====================
   Subscription: {
     gameUpdated: {
       subscribe: (_: any, { gameId }: { gameId: string }) => {
@@ -276,6 +296,9 @@ export const resolvers: IResolvers = {
     },
   },
 
+  // =====================
+  // 🔹 TYPE MAPPERS
+  // =====================
   ActiveGame: {
     id: (game: any) => game._id?.toString(),
     players: (game: any) =>
@@ -283,31 +306,18 @@ export const resolvers: IResolvers = {
         id: p.username,
         username: p.username,
       })),
-
     currentPlayer: (game: any) => {
-      const player = game.players?.[game.currentPlayerIndex];
-      return player
-        ? { id: player.username, username: player.username }
-        : { id: '', username: '' };
+      const player = game.players?.[game.currentPlayerIndex]
+      return player ? { id: player.username, username: player.username } : null
     },
-
-    dealer: (game: any) => {
-      const dealer = game.players?.[0];
-      return dealer
-        ? { id: dealer.username, username: dealer.username }
-        : { id: '', username: '' };
-    },
-
     discardPile: (game: any) =>
       (game.discardPile || []).map((c: any) => ({
         type: mapCardType(c.value),
         color: c.color,
         number: parseInt(c.value, 10) || null,
       })),
-
     drawPileSize: (game: any) =>
       Array.isArray(game.drawPile) ? game.drawPile.length : 0,
-
     playerHands: (game: any) =>
       (game.playerHands || []).map((h: any) => ({
         playerId: h.playerId,
@@ -319,18 +329,13 @@ export const resolvers: IResolvers = {
           number: parseInt(c.value, 10) || null,
         })),
       })),
-
-    winner: (game: any) =>
-      game.winner
-        ? { id: game.winner.username, username: game.winner.username }
-        : null,
   },
 }
 
 function mapCardType(value: string): string {
-  if (!value) return 'UNKNOWN';
-  const num = parseInt(value, 10);
-  if (!isNaN(num)) return 'NUMBER';
-  const special = ['SKIP', 'REVERSE', 'DRAW_TWO', 'WILD', 'WILD_DRAW_FOUR'];
-  return special.includes(value.toUpperCase()) ? value.toUpperCase() : 'OTHER';
+  if (!value) return 'UNKNOWN'
+  const num = parseInt(value, 10)
+  if (!isNaN(num)) return 'NUMBER'
+  const special = ['SKIP', 'REVERSE', 'DRAW_TWO', 'WILD', 'WILD_DRAW_FOUR']
+  return special.includes(value.toUpperCase()) ? value.toUpperCase() : 'OTHER'
 }

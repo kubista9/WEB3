@@ -447,10 +447,13 @@ function leaveGame() {
 onMounted(async () => {
   console.log('Game component mounted, gameId:', gameId)
   await gameStore.fetchGame(gameId)
-  console.log('Game loaded:', gameStore.game)
+  console.log('🎯 [FRONTEND] Loaded game:', JSON.parse(JSON.stringify(gameStore.game)))
+  const username = authStore.user?.username
+  console.log('👤 [FRONTEND] Current user:', username)
+  const myHandData = gameStore.game?.playerHands?.find((p: any) => p.username === username)
+  console.log('🃏 [FRONTEND] My hand data:', myHandData)
   setupSubscription()
 })
-
 
 onBeforeUnmount(() => {
   if (subscription) {

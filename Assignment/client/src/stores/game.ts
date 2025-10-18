@@ -51,7 +51,16 @@ export const useGameStore = defineStore('game', () => {
 
 
       game.value = data.activeGame
+      console.log('📦 [FRONTEND] Game fetched:', {
+        id: data.activeGame.id,
+        players: data.activeGame.players.map((p: any) => p.username),
+        playerHands: data.activeGame.playerHands.map((h: any) => ({
+          username: h.username,
+          cardCount: h.cardCount,
+        })),
+      })
       return data.activeGame
+
     } catch (error) {
       console.error('Failed to fetch game:', error)
       throw error
