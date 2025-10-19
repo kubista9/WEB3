@@ -1,14 +1,23 @@
-import { ApolloClient, InMemoryCache, split, HttpLink } from '@apollo/client/core'
+import { ApolloClient, InMemoryCache, HttpLink, split } from '@apollo/client/core'
+import { setContext } from '@apollo/client/link/context'
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { createClient } from 'graphql-ws'
 import { getMainDefinition } from '@apollo/client/utilities'
+import { useAuthStore } from '@/stores/auth'
 
 const httpLink = new HttpLink({
   uri: 'http://localhost:4000/graphql',
-  headers: (() => {
-    const token = localStorage.getItem('token')
-    return token ? { authorization: `Bearer ${token}` } : {}
-  })(),
+})
+
+const authLink = setContext((_, { headers }) => {
+  const authStore = useAuthStore()
+  const token = authStore.token || localStorage.getItem('token')
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : '',
+    },
+  }
 })
 
 const wsLink = new GraphQLWsLink(
@@ -32,7 +41,7 @@ const splitLink = split(
     )
   },
   wsLink,
-  httpLink
+  authLink.concat(httpLink)
 )
 
 export const apolloClient = new ApolloClient({

@@ -194,7 +194,6 @@ const DRAW_CARD = gql`
     }
   }
 `
-
 const GAME_SUBSCRIPTION = gql`
   subscription OnGameUpdated($gameId: ID!) {
     gameUpdated(gameId: $gameId) {

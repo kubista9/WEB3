@@ -37,7 +37,7 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = storedToken
       console.log('AUTH Restored user from token:', user.value)
     } catch (err) {
-      console.error('Failed to decode token:', err)
+      console.error('AUTH Failed to decode token:', err)
       logout()
     }
   }
