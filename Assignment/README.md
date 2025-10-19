@@ -5,10 +5,12 @@ A multiplayer UNO card game implemented with Vue.js, GraphQL, Node.js, and Mongo
 ## How to run
 
 in the root
-  npm install
+
+    npm install
 
 for client
-  npm run dev
+
+    npm run dev
 
 for server, you need docker and you need to have a running mongo:db container
 
@@ -38,7 +40,7 @@ then start the server via
 open in browser
 
   http://localhost:5173/
-  
+
 register
 login
 create a game
