@@ -310,6 +310,6 @@ function mapCardType(value: string): string {
   if (!value) return 'UNKNOWN'
   const num = parseInt(value, 10)
   if (!isNaN(num)) return 'NUMBER'
-  const special = ['SKIP', 'REVERSE', 'DRAW_TWO', 'WILD', 'WILD_DRAW_FOUR']
+  const special = ['SKIP', 'REVERSE', 'DRAW TWO', 'WILD', 'WILD DRAW']
   return special.includes(value.toUpperCase()) ? value.toUpperCase() : 'OTHER'
 }
