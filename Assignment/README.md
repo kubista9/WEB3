@@ -100,20 +100,30 @@ WILD -> WILD CARD
 ## Commands for development
 
 Backend (GraphQL):
-  http://localhost:4000/graphql
+
+    http://localhost:4000/graphql
 
 Frontend (Vue):
-  http://localhost:5173/
+
+    http://localhost:5173/
 General
-  npm install
-  npm test
-  npx jest deck.test.ts
-  npx ts-node deck.ts
-  npm create vue@latest client
-  npm run dev
+
+    npm install
+
+    npm test
+
+    npx jest deck.test.ts
+
+    npx ts-node deck.ts
+
+    npm create vue@latest client
+    
+    npm run dev
 
 MongoDB
-  docker ps
-  docker start mongodb
+
+    docker ps
+
+    docker start mongodb
 or
-  docker run -d -p 27017:27017 --name mongodb mongo:latest
+    docker run -d -p 27017:27017 --name mongodb mongo:latest
