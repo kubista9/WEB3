@@ -41,10 +41,10 @@ open in browser
 
     http://localhost:5173/
 
-register
-login
-create a game
-play
+- register
+- login
+- create a game
+- play
 
 ## Known bugs
 
@@ -125,5 +125,7 @@ MongoDB
     docker ps
 
     docker start mongodb
+
 or
+
     docker run -d -p 27017:27017 --name mongodb mongo:latest
