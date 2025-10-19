@@ -149,6 +149,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useLobbyStore } from '@/stores/lobby'
 import { useGameStore } from '@/stores/game'
 
+let pendingSub: any = null
 const router = useRouter()
 const authStore = useAuthStore()
 const lobbyStore = useLobbyStore()
@@ -180,12 +181,26 @@ onMounted(async () => {
   await refreshGames()
   loading.value = false
   refreshInterval.value = setInterval(refreshGames, 5000)
+
+  pendingSub = lobbyStore.subscribeToPendingGames(async (updatedGame) => {
+    console.log('🛰️ [LOBBY] pendingGameUpdated received:', updatedGame)
+    const myUsername = authStore.user?.username
+    if (updatedGame === null) {
+      console.log('🚀 [LOBBY] Game removed (probably started). Checking participation...')
+      const myGame = availableGames.value.find((g) =>
+        g.players.some((p: any) => p.username === myUsername)
+      )
+      if (myGame) {
+        console.log('➡️ [LOBBY] Redirecting to active game:', myGame.id)
+        await router.push(`/game/${myGame.id}`)
+      }
+    }
+  })
 })
 
 onUnmounted(() => {
-  if (refreshInterval.value) {
-    clearInterval(refreshInterval.value)
-  }
+  if (refreshInterval.value) clearInterval(refreshInterval.value)
+  if (pendingSub) pendingSub.unsubscribe()
 })
 
 async function refreshGames() {

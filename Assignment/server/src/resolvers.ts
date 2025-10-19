@@ -10,9 +10,7 @@ const PENDING_GAME_UPDATED = 'PENDING_GAME_UPDATED'
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey'
 
 export const resolvers: IResolvers = {
-  // =====================
-  // 🔹 QUERIES
-  // =====================
+  // QUERIES
   Query: {
     pendingGames: async () => {
       try {
@@ -44,9 +42,7 @@ export const resolvers: IResolvers = {
     },
   },
 
-  // =====================
-  // 🔹 MUTATIONS
-  // =====================
+  // MUTATIONS
   Mutation: {
     createGame: async (_: any, { input }: any, context: any) => {
       if (!context.userId) throw new Error('Authentication required')
@@ -111,7 +107,7 @@ export const resolvers: IResolvers = {
 
       for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
-        ;[deck[i], deck[j]] = [deck[j], deck[i]]
+          ;[deck[i], deck[j]] = [deck[j], deck[i]]
       }
 
       const playerHands = pendingGame.players.map(p => {
@@ -146,8 +142,11 @@ export const resolvers: IResolvers = {
         })),
       })
 
+
       await PendingGame.findByIdAndDelete(input.gameId)
       await pubsub.publish(GAME_UPDATED, { gameUpdated: activeGame })
+      await pubsub.publish(PENDING_GAME_UPDATED, { pendingGameUpdated: null })
+      console.log('📢 [BACKEND] Published game start + pendingGameUpdated(null)')
       return activeGame
     },
 
@@ -255,9 +254,7 @@ export const resolvers: IResolvers = {
     },
   },
 
-  // =====================
-  // 🔹 SUBSCRIPTIONS
-  // =====================
+  // SUBSCRIPTIONS
   Subscription: {
     gameUpdated: {
       subscribe: (_: any, { gameId }: { gameId: string }) => {
@@ -296,9 +293,6 @@ export const resolvers: IResolvers = {
     },
   },
 
-  // =====================
-  // 🔹 TYPE MAPPERS
-  // =====================
   ActiveGame: {
     id: (game: any) => game._id?.toString(),
     players: (game: any) =>
@@ -332,6 +326,7 @@ export const resolvers: IResolvers = {
   },
 }
 
+// HELPER
 function mapCardType(value: string): string {
   if (!value) return 'UNKNOWN'
   const num = parseInt(value, 10)

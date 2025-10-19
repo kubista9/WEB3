@@ -129,14 +129,12 @@ const router = useRouter()
 const gameStore = useGameStore()
 const authStore = useAuthStore()
 const gameId = route.params.id as string
-
 const selectedCardIndex = ref<number | null>(null)
 const notifications = ref<string[]>([])
 const showColorPicker = ref(false)
 const pendingCardIndex = ref<number | null>(null)
 let subscription: any = null
 
-// GraphQL Operations
 const PLAY_CARD = gql`
   mutation PlayCard($input: PlayCardInput!) {
     playCard(input: $input) {
@@ -231,7 +229,6 @@ const GAME_SUBSCRIPTION = gql`
   }
 `
 
-// Computed properties
 const myHand = computed(() => {
   const game = gameStore.game
   if (!game || !game.playerHands) return []

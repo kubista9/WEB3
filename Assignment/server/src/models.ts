@@ -12,7 +12,7 @@ export interface ICard {
 
 export interface IMove extends Document {
   gameId: mongoose.Types.ObjectId;
-  playerId: string; // username
+  playerId: string;
   username: string;
   cardPlayed?: ICard;
   drawCount?: number;
@@ -22,7 +22,7 @@ export interface IMove extends Document {
 }
 
 export interface IPendingGame extends Document {
-  creatorId: string; // username
+  creatorId: string;
   creatorUsername: string;
   players: Array<{ username: string }>;
   maxPlayers: number;
@@ -65,7 +65,6 @@ export interface IUser extends Document {
   createdAt: Date;
 }
 
-// Player Schema - simplified, username is the ID
 const playerSchema = new Schema<IPlayer>(
   {
     username: {
@@ -80,7 +79,6 @@ const playerSchema = new Schema<IPlayer>(
   { timestamps: true }
 );
 
-// Move Schema
 const moveSchema = new Schema<IMove>(
   {
     gameId: {
@@ -107,7 +105,6 @@ const moveSchema = new Schema<IMove>(
   }
 );
 
-// Pending Game Schema
 const pendingGameSchema = new Schema<IPendingGame>(
   {
     creatorId: {
@@ -135,10 +132,8 @@ const pendingGameSchema = new Schema<IPendingGame>(
   { timestamps: false }
 );
 
-// Add TTL index to auto-delete expired pending games
 pendingGameSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-// Active Game Schema
 const activeGameSchema = new Schema<IActiveGame>(
   {
     players: [
@@ -184,7 +179,6 @@ const activeGameSchema = new Schema<IActiveGame>(
   { timestamps: true }
 );
 
-// Game History Schema
 const gameHistorySchema = new Schema<IGameHistory>(
   {
     players: [
@@ -209,7 +203,6 @@ const gameHistorySchema = new Schema<IGameHistory>(
   { timestamps: false }
 );
 
-// User Schema - for authentication
 const userSchema = new Schema<IUser>(
   {
     username: { type: String, required: true, unique: true },

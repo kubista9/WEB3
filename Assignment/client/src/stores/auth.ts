@@ -6,7 +6,6 @@ import { jwtDecode } from 'jwt-decode'
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<{ id: string; username: string } | null>(null)
   const token = ref<string | null>(localStorage.getItem('token'))
-
   const isAuthenticated = computed(() => !!token.value)
 
   async function login(username: string, password: string) {
@@ -36,9 +35,9 @@ export const useAuthStore = defineStore('auth', () => {
       const decoded: any = jwtDecode(storedToken)
       user.value = { id: decoded.username, username: decoded.username }
       token.value = storedToken
-      console.log('🔑 [AUTH] Restored user from token:', user.value)
+      console.log('AUTH Restored user from token:', user.value)
     } catch (err) {
-      console.error('❌ Failed to decode token:', err)
+      console.error('Failed to decode token:', err)
       logout()
     }
   }

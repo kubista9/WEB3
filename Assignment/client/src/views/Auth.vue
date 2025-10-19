@@ -76,18 +76,15 @@ import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
-
+const loading = ref(false)
+const error = ref('')
+const mode = ref('login')
+const isLogin = computed(() => mode.value === 'login')
 const formData = ref({
   username: '',
   password: '',
   confirmPassword: ''
 })
-
-const loading = ref(false)
-const error = ref('')
-const mode = ref('login')
-
-const isLogin = computed(() => mode.value === 'login')
 
 onMounted(() => {
   mode.value = route.query.mode as string || 'login'
@@ -102,7 +99,6 @@ function toggleMode() {
 async function handleSubmit() {
   error.value = ''
   
-  // Validation
   if (!formData.value.username || !formData.value.password) {
     error.value = 'Please fill in all fields'
     return
