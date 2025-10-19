@@ -16,30 +16,30 @@ for server, you need docker and you need to have a running mongo:db container
 
 install via
 
-  docker pull mongo:latest
+    docker pull mongo:latest
 
 then run the container, for example
 
-  docker run -d -p 27017:27017 --name mongodb mongo:latest
+    docker run -d -p 27017:27017 --name mongodb mongo:latest
   
 verify
 
-  docker ps
+    docker ps
 
 create .env file in the /server folder, example
 
-  MONGODB_URI=mongodb://localhost:27017/uno-game
-  CLIENT_URL=http://localhost:5173
-  NODE_ENV=development
-  JWT_SECRET=supersecretkey12345
+    MONGODB_URI=mongodb://localhost:27017/uno-game
+    CLIENT_URL=http://localhost:5173
+    NODE_ENV=development
+    JWT_SECRET=supersecretkey12345
 
 then start the server via
 
-  npm run dev
+    npm run dev
 
 open in browser
 
-  http://localhost:5173/
+    http://localhost:5173/
 
 register
 login
@@ -117,63 +117,3 @@ MongoDB
   docker start mongodb
 or
   docker run -d -p 27017:27017 --name mongodb mongo:latest
-
-### For Apollo Server testing (GraphQL mutations)
-
-register
-    mutation {
-      register(username: "jakub", password: "123456") {
-        token
-        user {
-          id
-          username
-        }
-      }
-    }
-
-login
-    mutation {
-      login(username: "jakub", password: "123456") {
-        token
-        user {
-          id
-          username
-        }
-      }
-    }
-
-create game
-    mutation CreateGame($input: CreateGameInput!) {
-      createGame(input: $input) {
-        id
-        creatorId
-        creatorUsername
-        players {
-          username
-        }
-        maxPlayers
-        createdAt
-      }
-    }
-
-    {
-      "input": {
-        "maxPlayers": 4
-      }
-    }
-
-    Header type: authorization + token from login
-
-join game
-    mutation JoinGame($input: JoinGameInput!) {
-      joinGame(input: $input) {
-        id
-        creatorId
-        creatorUsername
-        players {
-          username
-        }
-        maxPlayers
-        createdAt
-      }
-    }
