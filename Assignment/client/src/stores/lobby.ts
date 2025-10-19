@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { apolloClient } from '@/services/graphql'
+import { apolloClient } from '@/api/graphql'
 import { gql } from '@apollo/client/core'
 
 const GET_PENDING_GAMES = gql`

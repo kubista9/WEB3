@@ -87,7 +87,7 @@ export class Game {
     game.randomizer = randomizer;
     game._winner = winners === 1 ? memento.scores.findIndex(s => s >= memento.targetScore) : undefined;
 
-    if (memento.currentRound) { // not in the middle of the round when it was saved
+    if (memento.currentRound) {
       game._currentRound = Round.fromMemento(memento.currentRound, game.shuffler);
       game._currentRound.onEnd((event: { winner: number }) => { //   when round finishes
         const roundScore = game._currentRound!.score()!;

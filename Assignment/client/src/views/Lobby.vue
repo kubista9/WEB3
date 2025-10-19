@@ -61,22 +61,17 @@ onMounted(async () => {
   await refreshGames()
   loading.value = false
 
-  // Poll for updates
   refreshInterval = setInterval(refreshGames, 5000)
 
-  // Subscribe to real-time updates
   pendingSub = lobbyStore.subscribeToPendingGames(async (updatedGame) => {
-    console.log('🛰️ [LOBBY] pendingGameUpdated received:', updatedGame)
     const myUsername = authStore.user?.username
 
     if (updatedGame === null) {
-      console.log('🚀 [LOBBY] Game removed (probably started). Checking participation...')
       const myGame = availableGames.value.find((g) =>
         g.players.some((p: any) => p.username === myUsername)
       )
 
       if (myGame) {
-        console.log('➡️ [LOBBY] Redirecting to active game:', myGame.id)
         await router.push(`/game/${myGame.id}`)
       }
     }
@@ -129,9 +124,7 @@ async function handleStartGame(gameId: string) {
 
   isStarting.value = true
   try {
-    console.log('Starting game:', gameId)
     const result = await lobbyStore.startGame(gameId)
-    console.log('Game started, result:', result)
     gameStore.setGame(result)
     await router.push(`/game/${result.id}`)
   } catch (error: any) {

@@ -44,7 +44,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/game'
 import { useAuthStore } from '@/stores/auth'
-import { gameService } from '@/services/gameService'
+import { gameService } from '@/api/gameService'
 import GameNotification from '@/components/game/Notification.vue'
 import GameHeader from '@/components/game/GameHeader.vue'
 import OtherPlayers from '@/components/game/OtherPlayers.vue'
@@ -109,9 +109,7 @@ const canSayUno = computed(() => {
 })
 
 function setupSubscription() {
-  console.log('Setting up subscription for game:', gameId)
   subscription = gameService.subscribeToGame(gameId, (game) => {
-    console.log('Game updated via subscription:', game)
     gameStore.setGame(game)
   })
 }
@@ -129,9 +127,7 @@ async function handlePlayCard() {
 
   const card = myHand.value[selectedCardIndex.value]
   
-  // Handle wild cards (would need color picker UI)
   if (card.type === 'WILD' || card.type === 'WILD_DRAW_FOUR') {
-    // For now, default to RED
     await playCard(selectedCardIndex.value, 'RED')
   } else {
     await playCard(selectedCardIndex.value)
@@ -207,7 +203,6 @@ function leaveGame() {
 }
 
 onMounted(async () => {
-  console.log('Game component mounted, gameId:', gameId)
   await gameStore.fetchGame(gameId)
   setupSubscription()
 })

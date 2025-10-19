@@ -51,11 +51,11 @@ function getCardDisplay(card: Card) {
       return 'SKIP'
     case 'REVERSE':
       return '⇄'
-    case 'DRAW_TWO':
+    case 'DRAW TWO':
       return '+2'
-    case 'WILD':
-      return 'WILD'
-    case 'WILD_DRAW_FOUR':
+    case 'WILD CARD':
+      return 'WILD CARD'
+    case 'WILD DRAW':
       return '+4'
     default:
       return card.type || '?'

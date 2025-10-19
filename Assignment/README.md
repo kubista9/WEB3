@@ -64,6 +64,10 @@ So as a guest you need to paste the /game/:id manually in your browser.
 
 Sometimes the player card in Game page have written on them "NUMBER" instead of the actual number "9" or "OTHER"
 
+### Game Logic
+
+it is possible to play most card on top of the discard pile
+
 ## Requirements
 
 ### Assignment 2

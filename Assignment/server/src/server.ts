@@ -19,14 +19,10 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/uno-ga
 export const pubsub = new PubSub()
 
 async function startServer() {
-  console.log('Starting server...')
-  console.log('MongoDB URI:', MONGODB_URI)
-
   const app = express()
   const httpServer = http.createServer(app)
 
   try {
-    console.log('Connecting to MongoDB...')
     await mongoose.connect(MONGODB_URI)
     console.log('Connected to MongoDB')
   } catch (error) {

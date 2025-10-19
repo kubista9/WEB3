@@ -25,15 +25,6 @@ export const resolvers: IResolvers = {
       try {
         const game = await ActiveGame.findById(id)
         if (!game) throw new Error('Game not found')
-        console.log('🔍 [BACKEND] ActiveGame fetched:', {
-          id,
-          players: game.players.map(p => p.username),
-          playerHands: game.playerHands.map(p => ({
-            username: p.username,
-            cardCount: p.hand.length,
-          })),
-          discardTop: game.discardPile[0],
-        })
         return game
       } catch (err) {
         console.error('Error fetching active game:', err)
@@ -132,21 +123,9 @@ export const resolvers: IResolvers = {
       })
 
       await activeGame.save()
-
-      console.log('🎮 [BACKEND] New ActiveGame created:', {
-        gameId: activeGame._id,
-        players: activeGame.players.map(p => p.username),
-        playerHands: activeGame.playerHands.map(h => ({
-          username: h.username,
-          hand: h.hand.map(c => `${c.color}-${c.value}`),
-        })),
-      })
-
-
       await PendingGame.findByIdAndDelete(input.gameId)
       await pubsub.publish(GAME_UPDATED, { gameUpdated: activeGame })
       await pubsub.publish(PENDING_GAME_UPDATED, { pendingGameUpdated: null })
-      console.log('📢 [BACKEND] Published game start + pendingGameUpdated(null)')
       return activeGame
     },
 
