@@ -89,13 +89,13 @@ Combined with assignment 3 with real players
 ## Tests passed
 
 The number of tests passed/failed oscillates because of the randomizer but it should pass approximately 195+- tests
-40 failed, 198 passed (06.10)
+- 40 failed, 198 passed (06.10)
 
 ## Notes
 
 In the model/ there were the following changes in the naming convention:
-DRAW -> DRAW CARD
-WILD -> WILD CARD
+- DRAW -> DRAW CARD
+- WILD -> WILD CARD
 
 ## Commands for development
 
