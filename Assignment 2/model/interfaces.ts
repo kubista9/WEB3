@@ -1,3 +1,5 @@
+import { Deck } from './deck'
+
 export const colors = ['BLUE', 'GREEN', 'RED', 'YELLOW'] as const;
 export type Color = typeof colors[number];
 
@@ -70,5 +72,26 @@ export interface GameMemento {
   readonly targetScore: number;
   readonly scores: number[];
   readonly currentRound?: RoundMemento;
-  readonly ardsPerPlayer: number;
+  readonly cardsPerPlayer: number;
+}
+
+export interface GameState {
+  readonly players: string[];
+  readonly targetScore: number;
+  readonly scores: number[];
+  readonly currentRound?: RoundState;
+  readonly cardsPerPlayer: number;
+  readonly winner?: number;
+}
+
+export interface RoundState {
+  readonly players: string[];
+  readonly hands: Card[][];
+  readonly drawPile: Deck;
+  readonly discardPile: Deck;
+  readonly currentColor: Color;
+  readonly currentDirection: Direction;
+  readonly dealer: number;
+  readonly playerInTurn: number;
+  readonly ended: boolean;
 }

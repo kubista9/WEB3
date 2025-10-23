@@ -1,112 +1,46 @@
-import { Card, Color, colors, CardTypes } from './interfaces';
+import { Card, colors } from './interfaces';
+import * as  _ from 'lodash';
 
-export function hasColor(card: Card, color: Color): boolean {
-  return 'color' in card && card.color === color;
-}
+export type Deck = ReadonlyArray<Card>;
 
-export function hasNumber(card: Card, number: number): boolean {
-  return card.type === 'NUMBERED' && card.number === number;
-}
+export const createDeck = (): Deck => {
+  const numbered = colors.flatMap(color =>
+    _.range(0, 10).flatMap((n: number) =>
+      n === 0
+        ? [{ type: 'NUMBERED', color, number: n }]
+        : [
+          { type: 'NUMBERED', color, number: n },
+          { type: 'NUMBERED', color, number: n },
+        ]
+    )
+  );
 
-export class Deck {
-  private cards: Card[];
+  const specials = colors.flatMap(color => [
+    { type: 'SKIP', color },
+    { type: 'SKIP', color },
+    { type: 'REVERSE', color },
+    { type: 'REVERSE', color },
+    { type: 'DRAW CARD', color },
+    { type: 'DRAW CARD', color },
+  ]);
 
-  constructor(cards: Card[] = []) {
-    this.cards = [...cards];
-  }
+  const wilds = _.flatMap(_.range(4), () => [
+    { type: 'WILD CARD' },
+    { type: 'WILD DRAW' },
+  ] as any);
 
-  get size(): number {
-    return this.cards.length;
-  }
+  return Object.freeze([...numbered, ...specials, ...wilds]);
+};
 
-  startTheGame(): void {
-    this.cards = [];
+export const shuffleDeck = (deck: Deck): Deck => Object.freeze(_.shuffle([...deck]));
 
-    // Numbered cards
-    for (const color of colors) {
-      this.cards.push({ type: 'NUMBERED', color, number: 0 });
-      for (let number = 1; number <= 9; number++) {
-        this.cards.push({ type: 'NUMBERED', color, number });
-        this.cards.push({ type: 'NUMBERED', color, number });
-      }
-    }
+export const dealCard = (deck: Deck): [Card | undefined, Deck] =>
+  deck.length === 0 ? [undefined, deck] : [deck[0], Object.freeze(deck.slice(1))];
 
-    // Special colored cards
-    for (const color of colors) {
-      this.cards.push({ type: 'SKIP', color });
-      this.cards.push({ type: 'SKIP', color });
-      this.cards.push({ type: 'REVERSE', color });
-      this.cards.push({ type: 'REVERSE', color });
-      this.cards.push({ type: 'DRAW CARD', color });
-      this.cards.push({ type: 'DRAW CARD', color });
-    }
+export const peekCard = (deck: Deck): Card | undefined => deck[0];
 
-    // Wild cards
-    for (let i = 0; i < 4; i++) {
-      this.cards.push({ type: 'WILD CARD' });
-      this.cards.push({ type: 'WILD DRAW' });
-    }
-  }
+export const toMemento = (deck: Deck): Record<string, string | number>[] =>
+  deck.map(c => ({ ...c }));
 
-  shuffle<T>(shuffler: (cards: T[]) => void): void {
-    shuffler(this.cards as any);
-  }
-
-  deal(): Card | undefined {
-    return this.cards.shift();
-  }
-
-  peek(): Card | undefined {
-    return this.cards[0];
-  }
-
-  top(): Card {
-    if (this.cards.length === 0) {
-      throw new Error('Deck is empty');
-    }
-    return this.cards[0];
-  }
-
-  filter(predicate: (card: Card) => boolean): Deck {
-    return new Deck(this.cards.filter(predicate));
-  }
-
-  toMemento(): Record<string, string | number>[] {
-    return this.cards.map(card => ({ ...card }));
-  }
-
-  static fromMemento(memento: Record<string, string | number>[]): Deck {
-    const cards: Card[] = memento.map(cardData => {
-      const type = cardData.type as string;
-
-      if (type === 'NUMBERED') {
-        if (!('color' in cardData) || !('number' in cardData)) {
-          throw new Error('Invalid numbered card');
-        }
-        return { type: 'NUMBERED', color: cardData.color as Color, number: cardData.number as number };
-      }
-      if (type === 'SKIP') {
-        if (!('color' in cardData)) throw new Error('Invalid skip card');
-        return { type: 'SKIP', color: cardData.color as Color };
-      }
-      if (type === 'REVERSE') {
-        if (!('color' in cardData)) throw new Error('Invalid reverse card');
-        return { type: 'REVERSE', color: cardData.color as Color };
-      }
-      if (type === 'DRAW CARD') {
-        if (!('color' in cardData)) throw new Error('Invalid draw card');
-        return { type: 'DRAW CARD', color: cardData.color as Color };
-      }
-      if (type === 'WILD CARD') {
-        return { type: 'WILD CARD' };
-      }
-      if (type === 'WILD DRAW') {
-        return { type: 'WILD DRAW' };
-      }
-
-      throw new Error(`Invalid card type: ${type}`);
-    });
-
-    return new Deck(cards);
-  }
-}
+export const fromMemento = (mem: Record<string, string | number>[]): Deck =>
+  Object.freeze(mem.map(c => ({ ...c })) as Card[]);
