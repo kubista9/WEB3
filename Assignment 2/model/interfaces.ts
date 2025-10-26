@@ -1,4 +1,4 @@
-import { Deck } from './deck'
+import { Deck } from './deck';
 
 export const colors = ['BLUE', 'GREEN', 'RED', 'YELLOW'] as const;
 export type Color = typeof colors[number];
@@ -43,9 +43,8 @@ export type WildDrawCard = Readonly<{
 export type ColoredCard = NumberedCard | SkipCard | ReverseCard | DrawCard;
 export type WildCards = WildCard | WildDrawCard;
 export type Card = ColoredCard | WildCards;
-export type CardTypes = Card;
 
-export type TypedCard<T extends Type> = // conditional if statements
+export type TypedCard<T extends Type> =
   T extends 'NUMBERED' ? NumberedCard :
   T extends 'SKIP' ? SkipCard :
   T extends 'REVERSE' ? ReverseCard :
@@ -57,10 +56,10 @@ export type TypedCard<T extends Type> = // conditional if statements
 export type Direction = 'clockwise' | 'counterclockwise';
 
 export interface RoundMemento {
-  readonly players: string[];
-  readonly hands: Record<string, string | number>[][];
-  readonly drawPile: Record<string, string | number>[];
-  readonly discardPile: Record<string, string | number>[];
+  readonly players: readonly string[];
+  readonly hands: readonly (readonly Record<string, string | number>[])[];
+  readonly drawPile: readonly Record<string, string | number>[];
+  readonly discardPile: readonly Record<string, string | number>[];
   readonly currentColor: string;
   readonly currentDirection: Direction;
   readonly dealer: number;
@@ -68,30 +67,31 @@ export interface RoundMemento {
 }
 
 export interface GameMemento {
-  readonly players: string[];
+  readonly players: readonly string[];
   readonly targetScore: number;
-  readonly scores: number[];
+  readonly scores: readonly number[];
   readonly currentRound?: RoundMemento;
   readonly cardsPerPlayer: number;
 }
 
-export interface GameState {
-  readonly players: string[];
-  readonly targetScore: number;
-  readonly scores: number[];
-  readonly currentRound?: RoundState;
-  readonly cardsPerPlayer: number;
-  readonly winner?: number;
-}
-
 export interface RoundState {
-  readonly players: string[];
-  readonly hands: Card[][];
-  readonly drawPile: Deck;
-  readonly discardPile: Deck;
+  readonly players: readonly string[];
+  readonly hands: readonly (readonly Card[])[];
+  readonly drawPile: readonly Card[];
+  readonly discardPile: readonly Card[];
   readonly currentColor: Color;
   readonly currentDirection: Direction;
   readonly dealer: number;
   readonly playerInTurn: number;
   readonly ended: boolean;
+  readonly winner?: number;
+}
+
+export interface GameState {
+  readonly players: readonly string[];
+  readonly targetScore: number;
+  readonly scores: readonly number[];
+  readonly currentRound?: RoundState | null;
+  readonly cardsPerPlayer: number;
+  readonly winner?: number;
 }

@@ -1,19 +1,6 @@
-import { Card, Color, Direction, RoundMemento } from './interfaces';
+import { Card, Color, Direction, RoundMemento, RoundState } from './interfaces';
 import { Deck, createDeck, shuffleDeck, dealCard } from './deck';
 import * as _ from 'lodash';
-
-export interface RoundState {
-  players: string[];
-  hands: ReadonlyArray<ReadonlyArray<Card>>;
-  drawPile: Deck;
-  discardPile: Deck;
-  currentColor: Color;
-  currentDirection: Direction;
-  dealer: number;
-  playerInTurn: number;
-  ended: boolean;
-  winner?: number;
-}
 
 export const createRound = (
   players: string[],
