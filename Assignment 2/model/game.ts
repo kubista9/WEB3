@@ -1,19 +1,11 @@
-import { GameMemento } from './interfaces';
+import { GameMemento, GameState, RoundState } from './interfaces';
 import {
-  RoundState,
   createRound,
   toMemento as roundToMemento,
   fromMemento as roundFromMemento,
 } from './round';
 
-export interface GameState {
-  players: string[];
-  scores: ReadonlyArray<number>;
-  targetScore: number;
-  currentRound: RoundState | null;
-  cardsPerPlayer: number;
-  winner?: number;
-}
+
 
 export const createGame = (
   players: string[],
