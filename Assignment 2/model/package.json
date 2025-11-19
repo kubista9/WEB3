@@ -1,0 +1,12 @@
+{
+    "name": "@uno/model",
+    "version": "1.0.0",
+    "main": "dist/round.js",
+    "types": "dist/round.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc"
+    }
+}

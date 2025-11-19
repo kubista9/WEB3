@@ -1,0 +1,90 @@
+# UNO Game Project ( Functional )
+
+A multiplayer UNO card game implemented with Next.js, GraphQL, Node.js
+
+## How to run
+
+in the root
+
+    npm install
+
+for server
+
+    npm run dev
+
+for client 
+
+    npm run dev
+
+open in browser
+
+    http://localhost:3000/
+
+- register
+- login
+- create a game
+- play
+
+## Known bugs
+none for now
+
+## Requirements
+
+### Assignment 4 ( Model )
+- Define immutable types for UNO corresponding to the types you defined in assignment 1
+- Define functions that manipulate data according to the UNO rules
+- Uses lodash
+- Uses only pure functions
+- Functions should be written in functional style 
+- Say UNO Functionality ----WORKING ON IT
+
+### Assignment 5
+- Uses model from Assignment 4
+- Uses Redux for state management
+- Uses RxJS for handling messages from the server
+- Uses React for rendering
+- The implementation must retain the features from assignments 1 – 3
+From Assignment 2:
+    a) screen for setting up a game ( lobby )
+    b) screen for playing ( game )
+    c) using consistent composition API ------ NEED TO CHECK
+    d) it has a GameOverview screen but it is not used. It is available at /game/:id/overivew with mockup data ----WORKING ON IT
+
+From Assignment 3
+    e) can play against 1-3 human opponents
+    f) users can identify themselves
+    g) users can create a game
+    h) users can join existing game
+    i) users get notified when something happens --- WORKING ON IT
+    j) the server uses GraphQL communication protocol ---- NEED TO CHECK
+    k) user registration and login
+    l) server uses Apollo server. -------- NEED TO CHECK
+
+### Assignment 6
+- The implementation has features from assignment 5
+- The implementatin uses Next.js for server-side rendering
+- The implementation works both when using ”npm run dev” and ”npm run build; npm run start” ---- NEED TO CHECK
+
+## Tests passed
+
+- 16 failed, 169 passed (18.11)
+
+## Commands for development
+
+General
+
+    npm install
+
+    npm test
+
+    npx jest deck.test.ts
+
+    npm run build
+
+    npm start
+
+    npx create-next-app@latest 
+
+    npm run dev
+
+    npm run start
