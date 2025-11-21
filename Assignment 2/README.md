@@ -44,6 +44,7 @@ none for now
 - Uses RxJS for handling messages from the server
 - Uses React for rendering
 - The implementation must retain the features from assignments 1 – 3
+
 #### From Assignment 2:
     - a) screen for setting up a game ( lobby )
     - b) screen for playing ( game )
