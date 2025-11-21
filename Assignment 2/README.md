@@ -29,7 +29,7 @@ open in browser
 none for now
 
 ## Notes
-- It is possible to play only one round of uno, if you wish to continue you must leave the game and create a new game
+- It is possible to play only one round of uno, if you wish to play more, you must leave the game and create a new game
 
 ## Requirements
 
@@ -52,9 +52,7 @@ Could have
 - Uses RxJS for handling messages from the server
 - Uses React for rendering
 - Retains the features from assignments 1–3
-
-Should have
-- The implementation should use React for rendering
+- The implementation should use React for rendering ( Shoud have )
 
 #### From Assignment 2:
 - The player should be able to play one round of Uno against 1-3 players
@@ -67,7 +65,7 @@ Should have
 - The application should have a game over screen indicating the result — NEED TO CHECK
 
 Could have 
-Play an entire game (with score) of Uno against 1-3 players
+- Play an entire game (with score) of Uno against 1-3 players
 
 #### From Assignment 3:
 - Can play against 1–3 human opponents
