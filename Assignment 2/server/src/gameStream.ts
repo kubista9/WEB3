@@ -18,8 +18,8 @@ export const game$ = actions$.pipe(
             currentRound: play(action.payload.index, action.payload.color, state.currentRound!)
           }
         } catch (err) {
-          console.warn('⚠️ Invalid play ignored:', (err as Error).message)
-          return state // keep game running
+          console.warn('Invalid play ignored:', (err as Error).message)
+          return state
         }
 
       case 'DRAW':

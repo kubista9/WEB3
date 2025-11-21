@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import Cookies from "js-cookie"
@@ -16,14 +16,51 @@ const colorMap: Record<string, string> = {
     YELLOW: "#c1c100"
 }
 
+// === Helper: UNO scoring for a single card (same as in round.ts) ===
+function cardPoints(card: Card): number {
+    switch (card.type) {
+        case "NUMBERED":
+            return card.number
+        case "DRAW":
+        case "REVERSE":
+        case "SKIP":
+            return 20
+        case "WILD":
+        case "WILD DRAW":
+            return 50
+        default:
+            return 0
+    }
+}
+
+// === Helper: nice text for a card ===
+function describeCard(card: Card | undefined): string {
+    if (!card) return "a card"
+    const hasColor = "color" in card && (card as any).color
+    const colorPart = hasColor ? `${(card as any).color} ` : ""
+    if (card.type === "NUMBERED") {
+        return `${colorPart}${card.number}`
+    }
+    return `${colorPart}${card.type}`
+}
+
 export default function GameRoomPage() {
     const { id } = useParams()
     const router = useRouter()
     const player = Cookies.get("player") ?? "Unknown"
     const roundState: Round | null = useSelector((state: RootState) => state.game.state)
+
     const [showPicker, setShowPicker] = useState(false)
     const [pendingCard, setPendingCard] = useState<{ index: number; card: Card } | null>(null)
+
+    // Local toast notification (bottom-right)
     const [localNote, setLocalNote] = useState<string | null>(null)
+
+    // To avoid spamming the same event notification repeatedly
+    const lastEventRef = useRef<string | null>(null)
+
+    // To ensure winner alert is only shown once per round
+    const [hasShownWinner, setHasShownWinner] = useState(false)
 
     function notify(msg: string) {
         setLocalNote(msg)
@@ -37,6 +74,64 @@ export default function GameRoomPage() {
     useEffect(() => {
         if (!id) router.push("/lobby")
     }, [id, router])
+
+    // === Global notifications based on round state (plays, draws, winner) ===
+    useEffect(() => {
+        if (!roundState) return
+
+        const {
+            lastAction,
+            lastPlayedBy,
+            discardPile,
+            hands,
+            players,
+            playerInTurn,
+            winner
+        } = roundState
+
+        // --- Action notifications (play / draw) ---
+        if (lastAction && lastPlayedBy !== undefined && lastPlayedBy >= 0) {
+            const handSize = hands[lastPlayedBy]?.length ?? 0
+            const top = discardPile[discardPile.length - 1]
+
+            // Signature that changes when something new happens
+            const eventId = `${lastAction}-${lastPlayedBy}-${handSize}-${top ? `${top.type}-${"color" in top ? (top as any).color ?? "" : ""}-${top.type === "NUMBERED" ? (top as any).number ?? "" : ""}` : ""
+                }`
+
+            if (lastEventRef.current !== eventId) {
+                lastEventRef.current = eventId
+                const actor = players[lastPlayedBy]
+
+                if (lastAction === "play") {
+                    notify(`${actor} played ${describeCard(top)}`)
+                } else if (lastAction === "draw") {
+                    notify(`${actor} drew a card`)
+                }
+            }
+        }
+
+        // --- End-of-round winner alert + scoreboard ---
+        if (playerInTurn === undefined && typeof winner === "number" && !hasShownWinner) {
+            // Points per player = sum of cardPoints of the cards in their hand
+            const pointsPerPlayer = roundState.hands.map(hand =>
+                hand.reduce((sum, c) => sum + cardPoints(c), 0)
+            )
+
+            const scoreboard = roundState.players
+                .map((name, idx) => ({
+                    name,
+                    points: pointsPerPlayer[idx]
+                }))
+                .sort((a, b) => b.points - a.points)
+
+            const lines = scoreboard
+                .map(s => `${s.name}: ${s.points} points`)
+                .join("\n")
+
+            alert(`Winner is ${roundState.players[winner]}!\n\nScores:\n${lines}`)
+            setHasShownWinner(true)
+        }
+    }, [roundState, hasShownWinner])
 
     if (!roundState) {
         return <div style={{ padding: 40 }}>Loading game...</div>
@@ -196,7 +291,6 @@ export default function GameRoomPage() {
 
             {/* ACTION BUTTONS */}
             <div style={{ marginTop: 30, display: "flex", gap: 20, justifyContent: "center" }}>
-
                 {/* DRAW BUTTON */}
                 <button
                     onClick={drawCard}
@@ -241,8 +335,7 @@ export default function GameRoomPage() {
                 </button>
             </div>
 
-
-            {/* LOCAL NOTIFICATION (NOT TURN) */}
+            {/* LOCAL NOTIFICATION TOAST */}
             {localNote && (
                 <div
                     style={{

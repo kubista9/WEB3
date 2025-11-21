@@ -164,7 +164,6 @@ export function createRound(
       direction,
       unoSaid: new Array(playerCount).fill(false),
       winner: undefined,
-      // ⭐ FIX: always assign a concrete number, never undefined
       lastPlayedBy: lastPlayedBy ?? dealer,
       lastAction: undefined,
       shuffler,
