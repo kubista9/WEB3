@@ -46,20 +46,20 @@ none for now
 - The implementation must retain the features from assignments 1–3
 
 #### From Assignment 2:
-- a) screen for setting up a game (lobby)
-- b) screen for playing (game)
-- c) using consistent composition API — NEED TO CHECK
-- d) GameOverview screen: available at /game/:id/overview with mock data — WORKING ON IT
+    - a) screen for setting up a game (lobby)
+    - b) screen for playing (game)
+    - c) using consistent composition API — NEED TO CHECK
+    - d) GameOverview screen: available at /game/:id/overview with mock data — WORKING ON IT
 
 #### From Assignment 3:
-- e) can play against 1–3 human opponents
-- f) users can identify themselves
-- g) users can create a game
-- h) users can join existing games
-- i) users get notifications — WORKING ON IT
-- j) server uses GraphQL — NEED TO CHECK
-- k) user registration and login
-- l) server uses Apollo Server — NEED TO CHECK
+    - e) can play against 1–3 human opponents
+    - f) users can identify themselves
+    - g) users can create a game
+    - h) users can join existing games
+    - i) users get notifications — WORKING ON IT
+    - j) server uses GraphQL — NEED TO CHECK
+    - k) user registration and login
+    - l) server uses Apollo Server — NEED TO CHECK
 
 ### Assignment 6
 - Features from Assignment 5
