@@ -77,7 +77,7 @@ to install
 
     npm install
 
-to build
+to build, mostly for model
 
     npm run build
 

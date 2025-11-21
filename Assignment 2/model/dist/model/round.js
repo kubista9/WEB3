@@ -49,6 +49,7 @@ exports.winner = winner;
 exports.score = score;
 exports.topOfDiscard = topOfDiscard;
 exports.dealHands = dealHands;
+exports.lastPlayedBy = lastPlayedBy;
 const lodash_1 = __importDefault(require("lodash"));
 const deck = __importStar(require("./deck"));
 const random_utils_1 = require("../utils/random_utils");
@@ -128,7 +129,7 @@ function play(index, chosenColor, round) {
         ? { ...baseRound, playerInTurn: undefined, winner }
         : { ...baseRound, playerInTurn: nextPlayer };
 }
-function createRound(players, dealer, shuffler, cardsPerPlayer = 7) {
+function createRound(players, dealer, shuffler, cardsPerPlayer = 7, lastPlayedBy) {
     const playerCount = players.length;
     if (playerCount < 2)
         throw new Error("Round requires at least 2 players");
@@ -180,7 +181,8 @@ function createRound(players, dealer, shuffler, cardsPerPlayer = 7) {
             direction,
             unoSaid: new Array(playerCount).fill(false),
             winner: undefined,
-            lastPlayedBy: undefined,
+            // ⭐ FIX: always assign a concrete number, never undefined
+            lastPlayedBy: lastPlayedBy ?? dealer,
             lastAction: undefined,
             shuffler,
         };
@@ -366,4 +368,7 @@ function topOfDiscard(round) {
 function dealHands(deck, playerCount, cardsPerPlayer) {
     const hands = lodash_1.default.range(playerCount).map((i) => deck.slice(i * cardsPerPlayer, (i + 1) * cardsPerPlayer));
     return { hands, nextIndex: playerCount * cardsPerPlayer };
+}
+function lastPlayedBy(round) {
+    return round.lastPlayedBy;
 }

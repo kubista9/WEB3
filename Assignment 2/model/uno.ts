@@ -70,11 +70,11 @@ export function play(roundAction: (r: Round) => Round, game: Game): Game {
 }
 
 export function winner(game: Game): number | undefined {
-    return game.winner
+  return game.winner
 }
 
 export default {
-    createGame,
-    play,
-    winner
+  createGame,
+  play,
+  winner
 }

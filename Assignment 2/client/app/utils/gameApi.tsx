@@ -22,11 +22,14 @@ interface ServerMessage {
     | "LOGIN_RESULT"
     | "GAME_STARTED"
     | "GAME_STATE"
+    | "UNO_CALLED"
+    | "UNO_PENALTY"
     lobby?: LobbyGame[]
     ok?: boolean
     id?: string
     state?: any
     gameId?: string
+    text?: string
 }
 
 export interface ClientAction {
@@ -36,6 +39,7 @@ export interface ClientAction {
 
 const WS_URL = "ws://localhost:4000"
 let socket$: WebSocketSubject<any> | null = null
+
 let onLoginSuccess: (() => void) | null = null
 let onGameStart: ((id: string) => void) | null = null
 
@@ -57,13 +61,11 @@ export default function connectWebSocket() {
 
     socket$.subscribe({
         next: (msg: ServerMessage) => {
-            console.log("RAW MESSAGE FROM SERVER:", msg)
             console.log("WS -> client received:", msg)
+
             switch (msg.type) {
                 case "LOBBY_UPDATE":
-                    if (msg.lobby) {
-                        store.dispatch(setLobby(msg.lobby))
-                    }
+                    if (msg.lobby) store.dispatch(setLobby(msg.lobby))
                     break
 
                 case "PLAYER_JOINED":
@@ -71,15 +73,13 @@ export default function connectWebSocket() {
                     break
 
                 case "REGISTER_RESULT":
-                    msg.ok
-                        ? store.dispatch(push("Registered successfully"))
-                        : store.dispatch(push("Username already exists"))
+                    store.dispatch(push(msg.ok ? "Registered successfully" : "Username already exists"))
                     break
 
                 case "LOGIN_RESULT":
                     if (msg.ok) {
                         store.dispatch(push("Logged in successfully"))
-                        if (onLoginSuccess) onLoginSuccess()
+                        onLoginSuccess?.()
                     } else {
                         store.dispatch(push("Invalid login"))
                     }
@@ -88,30 +88,41 @@ export default function connectWebSocket() {
                 case "GAME_STARTED":
                     if (msg.id) {
                         store.dispatch(setGameId(msg.id))
-                        if (onGameStart) onGameStart(msg.id)
+                        onGameStart?.(msg.id)
                     }
                     break
 
                 case "GAME_STATE":
                     if (msg.state && msg.gameId) {
-                        store.dispatch(setState({
-                            gameId: msg.gameId,
-                            state: msg.state
-                        }))
+                        store.dispatch(
+                            setState({
+                                gameId: msg.gameId,
+                                state: msg.state,
+                            })
+                        )
                     }
                     break
 
+                case "UNO_CALLED":
+                    store.dispatch(push(msg.text ?? "UNO!"))
+                    break
+
+                case "UNO_PENALTY":
+                    store.dispatch(push(msg.text ?? "UNO penalty applied"))
+                    break
             }
         },
+
         error: (err) => {
             console.error("WS error:", err)
             store.dispatch(setConnected(false))
         },
+
         complete: () => {
-            console.warn("WS completed")
+            console.warn("WS connection closed")
             store.dispatch(setConnected(false))
             socket$ = null
-        }
+        },
     })
 
     store.dispatch(setConnected(true))

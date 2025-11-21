@@ -2,11 +2,12 @@ import { WebSocket, WebSocketServer } from "ws"
 import { v4 as uuid } from "uuid"
 import { register, login } from "./database"
 import { createGame } from "../../model/dist/model/uno"
-import { play, draw } from "../../model/dist/model/round"
+import { play, draw, catchUnoFailure, checkUnoFailure, sayUno } from "../../model/dist/model/round"
 import type { Game, Round } from "../../model/dist/model/interfaces"
 
 export const lobby = new Map<string, LobbyGame>()
 export const runningGames = new Map<string, Game>()
+
 export interface LobbyGame {
     id: string
     host: string
@@ -221,6 +222,86 @@ export function handleMessage(
             runningGames.set(gameId, newGame)
 
             broadcastGameState(wss, gameId, newGame)
+            break
+        }
+
+        case "SAY_UNO": {
+            const { gameId, player } = action.payload
+            const game = runningGames.get(gameId)
+            if (!game) break
+
+            const round = game.currentRound
+            if (!round) break
+
+            const playerIndex = game.players.indexOf(player)
+            if (playerIndex === -1) break
+
+            // Small safety: only allow SAY_UNO when player is realistically
+            // about to have / has UNO (2 cards before play, or 1 after play)
+            const cardsInHand = round.hands[playerIndex]?.length ?? 0
+            if (cardsInHand > 2) {
+                console.log(`IGNORED SAY_UNO from ${player} — has ${cardsInHand} cards`)
+                break
+            }
+
+            const newRound = sayUno(playerIndex, round)
+            const newGame = { ...game, currentRound: newRound }
+            runningGames.set(gameId, newGame)
+
+            const msg = JSON.stringify({
+                type: "UNO_CALLED",
+                text: `${player} said UNO!`
+            })
+
+            wss.clients.forEach(c => {
+                if (c.readyState === WebSocket.OPEN) c.send(msg)
+            })
+
+            broadcastGameState(wss, gameId, newGame)
+            break
+        }
+
+        case "CALL_OUT": {
+            const { gameId, accuser, accused } = action.payload
+            const game = runningGames.get(gameId)
+            if (!game) break
+
+            const round = game.currentRound
+            if (!round) break
+
+            const accuserIndex = game.players.indexOf(accuser)
+            const accusedIndex = game.players.indexOf(accused)
+            if (accuserIndex === -1 || accusedIndex === -1) break
+
+            const failure = checkUnoFailure(
+                { accuser: accuserIndex, accused: accusedIndex },
+                round
+            )
+
+            if (failure) {
+                const penalized = catchUnoFailure(
+                    { accuser: accuserIndex, accused: accusedIndex },
+                    round
+                )
+
+                const newGame = { ...game, currentRound: penalized }
+                runningGames.set(gameId, newGame)
+
+                const msg = JSON.stringify({
+                    type: "UNO_PENALTY",
+                    text: `${accused} forgot to say UNO and draws 4 cards!`
+                })
+                wss.clients.forEach(c => {
+                    if (c.readyState === WebSocket.OPEN) c.send(msg)
+                })
+
+                broadcastGameState(wss, gameId, newGame)
+            } else {
+                ws.send(JSON.stringify({
+                    type: "UNO_PENALTY",
+                    text: `Invalid call — no UNO penalty applies`
+                }))
+            }
             break
         }
 

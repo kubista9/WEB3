@@ -8,23 +8,23 @@ import type { RootState } from "../../store/store"
 import type { Card, Round } from "../../../../model/dist/model/interfaces"
 import connectWebSocket, { sendAction } from "../../utils/gameApi"
 
-const COLORS = ["RED", "GREEN", "BLUE", "YELLOW"]
+const COLORS = ["RED", "GREEN", "BLUE", "YELLOW"] as const
 const colorMap: Record<string, string> = {
     RED: "#e74c3c",
     GREEN: "#2ecc71",
     BLUE: "#3498db",
-    YELLOW: "#f1c40f"
+    YELLOW: "#c1c100"
 }
 
 export default function GameRoomPage() {
     const { id } = useParams()
     const router = useRouter()
-
     const player = Cookies.get("player") ?? "Unknown"
-    const round: Round | null = useSelector((state: RootState) => state.game.state)
+    const roundState: Round | null = useSelector((state: RootState) => state.game.state)
     const [showPicker, setShowPicker] = useState(false)
     const [pendingCard, setPendingCard] = useState<{ index: number; card: Card } | null>(null)
     const [localNote, setLocalNote] = useState<string | null>(null)
+
     function notify(msg: string) {
         setLocalNote(msg)
         setTimeout(() => setLocalNote(null), 2000)
@@ -38,14 +38,16 @@ export default function GameRoomPage() {
         if (!id) router.push("/lobby")
     }, [id, router])
 
-    if (!round) {
+    if (!roundState) {
         return <div style={{ padding: 40 }}>Loading game...</div>
     }
 
+    const round = roundState
     const playerIndex = round.players.indexOf(player)
     const isMyTurn = round.playerInTurn === playerIndex
     const topCard = round.discardPile.at(-1)
     const hand = round.hands[playerIndex] ?? []
+    const last = round.lastPlayedBy
 
     function handlePlay(i: number, card: Card) {
         if (!isMyTurn) {
@@ -81,6 +83,49 @@ export default function GameRoomPage() {
         })
     }
 
+    function sayUnoClick() {
+        const handSize = hand.length
+
+        if (!isMyTurn) {
+            notify("❌ You can only say UNO on your turn!")
+            return
+        }
+
+        if (handSize !== 1) {
+            notify("❌ You can only say UNO when you have exactly 1 card!")
+            return
+        }
+
+        sendAction({
+            type: "SAY_UNO",
+            payload: { gameId: id, player }
+        })
+    }
+
+    function callOutClick() {
+        if (last === undefined) {
+            notify("❌ No player to call out!")
+            return
+        }
+
+        const lastHandSize = round.hands[last]?.length ?? 0
+        const lastUnoSaid = round.unoSaid[last]
+
+        if (!(lastHandSize === 1 && !lastUnoSaid)) {
+            notify("❌ Nobody forgot to say UNO!")
+            return
+        }
+
+        sendAction({
+            type: "CALL_OUT",
+            payload: {
+                gameId: id,
+                accuser: player,
+                accused: round.players[last]
+            }
+        })
+    }
+
     return (
         <div style={{ padding: 40, textAlign: "center" }}>
             <h1>Uno Game</h1>
@@ -108,16 +153,17 @@ export default function GameRoomPage() {
                 {topCard?.type === "NUMBERED" && ` ${topCard.number}`}
             </div>
 
-
             <div style={{ marginBottom: 20 }}>Discard Pile</div>
 
             {/* PLAYER HAND */}
-            <div style={{
-                display: "flex",
-                gap: 10,
-                justifyContent: "center",
-                flexWrap: "wrap"
-            }}>
+            <div
+                style={{
+                    display: "flex",
+                    gap: 10,
+                    justifyContent: "center",
+                    flexWrap: "wrap"
+                }}
+            >
                 {hand.map((card, i) => {
                     const bg =
                         "color" in card && card.color
@@ -148,21 +194,53 @@ export default function GameRoomPage() {
                 })}
             </div>
 
-            {/* DRAW BUTTON */}
-            <button
-                onClick={drawCard}
-                style={{
-                    marginTop: 30,
-                    padding: "10px 30px",
-                    borderRadius: 10,
-                    border: "2px solid black",
-                    background: "white",
-                    cursor: "pointer",
-                    opacity: isMyTurn ? 1 : 0.4
-                }}
-            >
-                Draw Card
-            </button>
+            {/* ACTION BUTTONS */}
+            <div style={{ marginTop: 30, display: "flex", gap: 20, justifyContent: "center" }}>
+
+                {/* DRAW BUTTON */}
+                <button
+                    onClick={drawCard}
+                    style={{
+                        padding: "10px 30px",
+                        borderRadius: 10,
+                        border: "2px solid black",
+                        background: "white",
+                        cursor: isMyTurn ? "pointer" : "not-allowed",
+                        opacity: isMyTurn ? 1 : 0.4
+                    }}
+                >
+                    Draw Card
+                </button>
+
+                {/* SAY UNO – ALWAYS VISIBLE */}
+                <button
+                    onClick={sayUnoClick}
+                    style={{
+                        padding: "10px 30px",
+                        borderRadius: 10,
+                        border: "2px solid black",
+                        cursor: "pointer",
+                        fontWeight: "bold"
+                    }}
+                >
+                    Say UNO!
+                </button>
+
+                {/* CALL OUT – ALWAYS VISIBLE */}
+                <button
+                    onClick={callOutClick}
+                    style={{
+                        padding: "10px 30px",
+                        borderRadius: 10,
+                        border: "2px solid black",
+                        cursor: "pointer",
+                        fontWeight: "bold"
+                    }}
+                >
+                    Call Out UNO!
+                </button>
+            </div>
+
 
             {/* LOCAL NOTIFICATION (NOT TURN) */}
             {localNote && (

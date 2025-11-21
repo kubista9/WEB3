@@ -105,7 +105,8 @@ export function createRound(
   players: string[],
   dealer: number,
   shuffler?: Shuffler<Card>,
-  cardsPerPlayer: number = 7
+  cardsPerPlayer: number = 7,
+  lastPlayedBy?: number,
 ): Round {
   const playerCount = players.length
   if (playerCount < 2) throw new Error("Round requires at least 2 players")
@@ -163,7 +164,8 @@ export function createRound(
       direction,
       unoSaid: new Array(playerCount).fill(false),
       winner: undefined,
-      lastPlayedBy: undefined,
+      // ⭐ FIX: always assign a concrete number, never undefined
+      lastPlayedBy: lastPlayedBy ?? dealer,
       lastAction: undefined,
       shuffler,
     }
@@ -400,4 +402,8 @@ export function dealHands(
     deck.slice(i * cardsPerPlayer, (i + 1) * cardsPerPlayer)
   )
   return { hands, nextIndex: playerCount * cardsPerPlayer }
+}
+
+export function lastPlayedBy(round: Round): number | undefined {
+  return round.lastPlayedBy
 }
