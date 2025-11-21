@@ -67,34 +67,32 @@ none for now
 - Uses Next.js for server-side rendering
 - Works with “npm run dev” and “npm run build; npm run start” — NEED TO CHECK
 
-
 ## Tests passed
 
 - 16 failed, 169 passed (18.11)
 
 ## Commands for development
 
-General
+to install
 
     npm install
 
-
-    npm test
-
-
-    npx jest deck.test.ts
-
+to build
 
     npm run build
 
+to test the whole suite
 
-    npm start
+    npm test
 
-
-    npx create-next-app@latest 
-
+to run the script
 
     npm run dev
 
+to run individual test
 
-    npm run start
+    npx jest deck.test.ts
+
+to create next js project
+
+    npx create-next-app@latest 
