@@ -46,12 +46,14 @@ none for now
 - The implementation must retain the features from assignments 1–3
 
 #### From Assignment 2:
+
 a. Screen for setting up a game (lobby)
 b. Screen for playing (game)
 c. Using consistent composition API — NEED TO CHECK
 d. GameOverview screen available at /game/:id/overview — WORKING ON IT
 
 #### From Assignment 3:
+
 e. Can play against 1–3 human opponents
 f. Users can identify themselves
 g. Users can create a game
