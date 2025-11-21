@@ -1,19 +1,12 @@
 import { WebSocket, WebSocketServer } from "ws"
 import { v4 as uuid } from "uuid"
 import { register, login } from "./database"
-
 import { createGame } from "../../model/dist/model/uno"
-import {
-    play as playRound,
-    draw as drawRound,
-} from "../../model/dist/model/round"
-
+import { play, draw } from "../../model/dist/model/round"
 import type { Game, Round } from "../../model/dist/model/interfaces"
 
-/* -----------------------------------------------------
-   TYPES
------------------------------------------------------ */
-
+export const lobby = new Map<string, LobbyGame>()
+export const runningGames = new Map<string, Game>()
 export interface LobbyGame {
     id: string
     host: string
@@ -21,20 +14,6 @@ export interface LobbyGame {
     players: string[]
     maxPlayers: number
 }
-
-/* -----------------------------------------------------
-   GLOBAL STATE
------------------------------------------------------ */
-
-// lobby games (not started yet)
-export const lobby = new Map<string, LobbyGame>()
-
-// running games keyed by gameId
-export const runningGames = new Map<string, Game>()
-
-/* -----------------------------------------------------
-   BROADCAST HELPERS
------------------------------------------------------ */
 
 export function broadcastLobby(wss: WebSocketServer) {
     const json = JSON.stringify({
@@ -66,10 +45,6 @@ function broadcastGameState(wss: WebSocketServer, gameId: string, game: Game) {
     })
 }
 
-/* -----------------------------------------------------
-   MAIN HANDLER
------------------------------------------------------ */
-
 export function handleMessage(
     ws: WebSocket,
     raw: string,
@@ -86,27 +61,18 @@ export function handleMessage(
     console.log("WS ACTION =>", action)
 
     switch (action.type) {
-        /* ---------------------------------------------
-           REGISTER
-        --------------------------------------------- */
         case "REGISTER": {
             const ok = register(action.payload.username, action.payload.password)
             ws.send(JSON.stringify({ type: "REGISTER_RESULT", ok }))
             break
         }
 
-        /* ---------------------------------------------
-           LOGIN
-        --------------------------------------------- */
         case "LOGIN": {
             const ok = login(action.payload.username, action.payload.password)
             ws.send(JSON.stringify({ type: "LOGIN_RESULT", ok }))
             break
         }
 
-        /* ---------------------------------------------
-           GET LOBBY
-        --------------------------------------------- */
         case "GET_LOBBY": {
             ws.send(
                 JSON.stringify({
@@ -117,9 +83,6 @@ export function handleMessage(
             break
         }
 
-        /* ---------------------------------------------
-           CREATE GAME
-        --------------------------------------------- */
         case "CREATE_GAME": {
             const id = uuid()
             const host: string = action.payload.host ?? action.payload.player
@@ -137,9 +100,6 @@ export function handleMessage(
             break
         }
 
-        /* ---------------------------------------------
-           JOIN GAME
-        --------------------------------------------- */
         case "JOIN_GAME": {
             const gameId: string =
                 action.payload.id ?? action.payload.gameId ?? ""
@@ -155,7 +115,6 @@ export function handleMessage(
                 game.players.push(player)
             }
 
-            // notify lobby clients
             const msg = JSON.stringify({
                 type: "PLAYER_JOINED",
                 id: game.id,
@@ -172,28 +131,21 @@ export function handleMessage(
             break
         }
 
-        /* ---------------------------------------------
-           START GAME
-        --------------------------------------------- */
         case "START_GAME": {
             const gameId: string =
                 action.payload.id ?? action.payload.gameId ?? ""
             const gameLobby = lobby.get(gameId)
             if (!gameLobby) break
 
-            // create actual Uno Game (your model)
             const unoGame: Game = createGame({
                 players: gameLobby.players,
-                // other props (targetScore, cardsPerPlayer) use defaults
             })
 
             runningGames.set(gameId, unoGame)
             lobby.delete(gameId)
 
-            // update lobby for everyone
             broadcastLobby(wss)
 
-            // tell clients to navigate to /game/[id]
             const startedMsg = JSON.stringify({
                 type: "GAME_STARTED",
                 id: gameId,
@@ -204,15 +156,10 @@ export function handleMessage(
                     client.send(startedMsg)
                 }
             })
-
-            // initial round state
             broadcastGameState(wss, gameId, unoGame)
             break
         }
 
-        /* ---------------------------------------------
-           PLAY CARD (with player identity + turn enforcement)
-        --------------------------------------------- */
         case "PLAY": {
             const { gameId, player, index, color } = action.payload
             const game = runningGames.get(gameId)
@@ -223,7 +170,6 @@ export function handleMessage(
             const playerIndex = game.players.indexOf(player)
             if (playerIndex === -1) break
 
-            // turn enforcement
             if (round.playerInTurn !== playerIndex) {
                 console.log(
                     `IGNORED PLAY from ${player} — not their turn (currentTurn = ${round.playerInTurn})`
@@ -233,8 +179,7 @@ export function handleMessage(
 
             let newRound: Round
             try {
-                // your model signature: play(index, chosenColor, round)
-                newRound = playRound(index, color, round)
+                newRound = play(index, color, round)
             } catch (err) {
                 console.warn("Illegal PLAY:", (err as Error).message)
                 break
@@ -247,9 +192,6 @@ export function handleMessage(
             break
         }
 
-        /* ---------------------------------------------
-           DRAW CARD (with player identity + turn enforcement)
-        --------------------------------------------- */
         case "DRAW": {
             const { gameId, player } = action.payload
             const game = runningGames.get(gameId)
@@ -260,7 +202,6 @@ export function handleMessage(
             const playerIndex = game.players.indexOf(player)
             if (playerIndex === -1) break
 
-            // turn enforcement
             if (round.playerInTurn !== playerIndex) {
                 console.log(
                     `IGNORED DRAW from ${player} — not their turn (currentTurn = ${round.playerInTurn})`
@@ -270,8 +211,7 @@ export function handleMessage(
 
             let newRound: Round
             try {
-                // your model signature: draw(round)
-                newRound = drawRound(round)
+                newRound = draw(round)
             } catch (err) {
                 console.warn("Illegal DRAW:", (err as Error).message)
                 break

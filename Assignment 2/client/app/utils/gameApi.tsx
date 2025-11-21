@@ -36,8 +36,6 @@ export interface ClientAction {
 
 const WS_URL = "ws://localhost:4000"
 let socket$: WebSocketSubject<any> | null = null
-
-// CALLBACKS
 let onLoginSuccess: (() => void) | null = null
 let onGameStart: ((id: string) => void) | null = null
 
@@ -54,7 +52,6 @@ let isConnecting = false
 export default function connectWebSocket() {
     if (socket$ || isConnecting) return socket$
     isConnecting = true
-
 
     socket$ = webSocket({ url: WS_URL })
 

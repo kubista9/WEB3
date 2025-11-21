@@ -5,7 +5,6 @@ import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import connectWebSocket, { sendAction, setOnGameStart } from "../utils/gameApi"
-
 import type { LobbyGame } from "../utils/gameApi"
 import type { RootState } from "../store/store"
 
@@ -15,7 +14,6 @@ export default function LobbyPage() {
     const lobby = useSelector((state: RootState) => state.lobby)
     const [maxPlayers, setMaxPlayers] = useState(4)
 
-    // EFFECT #1 — Set player OR redirect
     useEffect(() => {
         const p = Cookies.get("player")
 
@@ -27,7 +25,6 @@ export default function LobbyPage() {
         setPlayer(p)
     }, [router])
 
-    // EFFECT #2 — Player ready → WS + redirect handler
     useEffect(() => {
         connectWebSocket()
         sendAction({ type: "GET_LOBBY" })

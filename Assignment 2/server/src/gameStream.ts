@@ -3,13 +3,9 @@ import { createGame } from '../../model/dist/model/uno'
 import { draw, sayUno, play } from '../../model/dist/model/round'
 import { Game } from '../../model/dist/model/interfaces'
 
-// Subject that receives actions
 export const actions$ = new Subject<{ type: string; payload?: any }>()
-
-// Initial game state
 let initialGame: Game = createGame({ players: ['A', 'B', 'C'] })
 
-// Reactive state stream
 export const game$ = actions$.pipe(
   scan((state: Game, action) => {
     console.log("Login requested from" + action.payload.username)
@@ -36,7 +32,6 @@ export const game$ = actions$.pipe(
   }, initialGame)
 )
 
-// Keep latest state for /state endpoint
 export let currentState: Game = initialGame
 game$.subscribe((newState) => {
   currentState = newState

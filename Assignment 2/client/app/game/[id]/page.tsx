@@ -4,13 +4,11 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import Cookies from "js-cookie"
-
 import type { RootState } from "../../store/store"
 import type { Card, Round } from "../../../../model/dist/model/interfaces"
 import connectWebSocket, { sendAction } from "../../utils/gameApi"
 
 const COLORS = ["RED", "GREEN", "BLUE", "YELLOW"]
-
 const colorMap: Record<string, string> = {
     RED: "#e74c3c",
     GREEN: "#2ecc71",
@@ -18,32 +16,24 @@ const colorMap: Record<string, string> = {
     YELLOW: "#f1c40f"
 }
 
-
 export default function GameRoomPage() {
     const { id } = useParams()
     const router = useRouter()
 
-    // Logged-in player identity
     const player = Cookies.get("player") ?? "Unknown"
-
     const round: Round | null = useSelector((state: RootState) => state.game.state)
-
     const [showPicker, setShowPicker] = useState(false)
     const [pendingCard, setPendingCard] = useState<{ index: number; card: Card } | null>(null)
-
-    // Local notifications (bottom right messages)
     const [localNote, setLocalNote] = useState<string | null>(null)
     function notify(msg: string) {
         setLocalNote(msg)
         setTimeout(() => setLocalNote(null), 2000)
     }
 
-    // Connect WS once
     useEffect(() => {
         connectWebSocket()
     }, [])
 
-    // Game ID check
     useEffect(() => {
         if (!id) router.push("/lobby")
     }, [id, router])
@@ -54,13 +44,9 @@ export default function GameRoomPage() {
 
     const playerIndex = round.players.indexOf(player)
     const isMyTurn = round.playerInTurn === playerIndex
-
     const topCard = round.discardPile.at(-1)
     const hand = round.hands[playerIndex] ?? []
 
-    /* ----------------------------------------------
-       PLAY CARD
-    ---------------------------------------------- */
     function handlePlay(i: number, card: Card) {
         if (!isMyTurn) {
             notify("❌ It is not your turn!")
@@ -83,9 +69,6 @@ export default function GameRoomPage() {
         })
     }
 
-    /* ----------------------------------------------
-       DRAW CARD
-    ---------------------------------------------- */
     function drawCard() {
         if (!isMyTurn) {
             notify("❌ It is not your turn!")

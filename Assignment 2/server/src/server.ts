@@ -9,10 +9,8 @@ app.get("/", (_req, res) => {
     res.send("UNO server is running")
 })
 
-// Attach WS
 startWebSocketServer(server)
 
-// Start HTTP+WS on the same port
 const PORT = 4000
 server.listen(PORT, () => {
     console.log(`🔥 UNO server (HTTP + WS) listening on ${PORT}`)

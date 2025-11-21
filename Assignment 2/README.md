@@ -1,6 +1,6 @@
 # UNO Game Project ( Functional )
 
-A multiplayer UNO card game implemented with Next.js, GraphQL, Node.js
+A multiplayer UNO card game implemented with Next.js, GraphQL, Node.js, Redux, Apollo
 
 ## How to run
 
@@ -30,7 +30,7 @@ none for now
 
 ## Requirements
 
-### Assignment 4 ( Model )
+### Assignment 4 ( Model from assignment 1 in functional )
 - Define immutable types for UNO corresponding to the types you defined in assignment 1
 - Define functions that manipulate data according to the UNO rules
 - Uses lodash
