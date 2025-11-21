@@ -43,28 +43,29 @@ none for now
 - Uses Redux for state management
 - Uses RxJS for handling messages from the server
 - Uses React for rendering
-- The implementation must retain the features from assignments 1 – 3
+- The implementation must retain the features from assignments 1–3
 
-#### From Assignment 2:
-    - a) screen for setting up a game ( lobby )
-    - b) screen for playing ( game )
-    - c) using consistent composition API ------ NEED TO CHECK
-    - d) it has a GameOverview screen but it is not used. It is available at /game/:id/overivew with mockup data ----WORKING ON IT
+#### From Assignment 2:
+- a) screen for setting up a game (lobby)
+- b) screen for playing (game)
+- c) using consistent composition API — NEED TO CHECK
+- d) GameOverview screen: available at /game/:id/overview with mock data — WORKING ON IT
 
-#### From Assignment 3
-    - e) can play against 1-3 human opponents
-    - f) users can identify themselves
-    - g) users can create a game
-    - h) users can join existing game
-    - i) users get notified when something happens --- WORKING ON IT
-    - j) the server uses GraphQL communication protocol ---- NEED TO CHECK
-    - k) user registration and login
-    - l) server uses Apollo server. -------- NEED TO CHECK
+#### From Assignment 3:
+- e) can play against 1–3 human opponents
+- f) users can identify themselves
+- g) users can create a game
+- h) users can join existing games
+- i) users get notifications — WORKING ON IT
+- j) server uses GraphQL — NEED TO CHECK
+- k) user registration and login
+- l) server uses Apollo Server — NEED TO CHECK
 
-### Assignment 6
-- The implementation has features from assignment 5
-- The implementatin uses Next.js for server-side rendering
-- The implementation works both when using ”npm run dev” and ”npm run build; npm run start” ---- NEED TO CHECK
+### Assignment 6
+- Features from Assignment 5
+- Uses Next.js for server-side rendering
+- Works with “npm run dev” and “npm run build; npm run start” — NEED TO CHECK
+
 
 ## Tests passed
 
@@ -76,16 +77,23 @@ General
 
     npm install
 
+
     npm test
+
 
     npx jest deck.test.ts
 
+
     npm run build
+
 
     npm start
 
+
     npx create-next-app@latest 
 
+
     npm run dev
+
 
     npm run start
