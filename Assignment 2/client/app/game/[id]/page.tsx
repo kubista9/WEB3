@@ -16,7 +16,6 @@ const colorMap: Record<string, string> = {
     YELLOW: "#c1c100"
 }
 
-// === Helper: UNO scoring for a single card (same as in round.ts) ===
 function cardPoints(card: Card): number {
     switch (card.type) {
         case "NUMBERED":
@@ -33,7 +32,6 @@ function cardPoints(card: Card): number {
     }
 }
 
-// === Helper: nice text for a card ===
 function describeCard(card: Card | undefined): string {
     if (!card) return "a card"
     const hasColor = "color" in card && (card as any).color
@@ -42,6 +40,38 @@ function describeCard(card: Card | undefined): string {
         return `${colorPart}${card.number}`
     }
     return `${colorPart}${card.type}`
+}
+
+function clientCanPlay(
+    card: Card,
+    top: Card | undefined,
+    currentColor: string | undefined
+): boolean {
+    if (card.type === "WILD" || card.type === "WILD DRAW") return true
+
+    const cardColor = "color" in card ? (card as any).color : undefined
+    const topColor = top && "color" in top ? (top as any).color : undefined
+    const activeColor = currentColor ?? topColor
+
+    if (card.type === "NUMBERED" && top?.type === "NUMBERED") {
+        if (card.number === (top as any).number) return true
+    }
+
+    if (activeColor && cardColor === activeColor) return true
+
+    if (
+        (card.type === "SKIP" && top?.type === "SKIP") ||
+        (card.type === "DRAW" && top?.type === "DRAW") ||
+        (card.type === "REVERSE" && top?.type === "REVERSE")
+    ) {
+        return true
+    }
+
+    if (top && (top.type === "WILD" || top.type === "WILD DRAW")) {
+        if (activeColor && cardColor === activeColor) return true
+    }
+
+    return false
 }
 
 export default function GameRoomPage() {
@@ -53,13 +83,10 @@ export default function GameRoomPage() {
     const [showPicker, setShowPicker] = useState(false)
     const [pendingCard, setPendingCard] = useState<{ index: number; card: Card } | null>(null)
 
-    // Local toast notification (bottom-right)
     const [localNote, setLocalNote] = useState<string | null>(null)
 
-    // To avoid spamming the same event notification repeatedly
     const lastEventRef = useRef<string | null>(null)
 
-    // To ensure winner alert is only shown once per round
     const [hasShownWinner, setHasShownWinner] = useState(false)
 
     function notify(msg: string) {
@@ -75,7 +102,6 @@ export default function GameRoomPage() {
         if (!id) router.push("/lobby")
     }, [id, router])
 
-    // === Global notifications based on round state (plays, draws, winner) ===
     useEffect(() => {
         if (!roundState) return
 
@@ -89,14 +115,16 @@ export default function GameRoomPage() {
             winner
         } = roundState
 
-        // --- Action notifications (play / draw) ---
         if (lastAction && lastPlayedBy !== undefined && lastPlayedBy >= 0) {
             const handSize = hands[lastPlayedBy]?.length ?? 0
             const top = discardPile[discardPile.length - 1]
 
-            // Signature that changes when something new happens
-            const eventId = `${lastAction}-${lastPlayedBy}-${handSize}-${top ? `${top.type}-${"color" in top ? (top as any).color ?? "" : ""}-${top.type === "NUMBERED" ? (top as any).number ?? "" : ""}` : ""
+            const topSig = top
+                ? `${top.type}-${"color" in top ? (top as any).color ?? "" : ""}-${top.type === "NUMBERED" ? (top as any).number ?? "" : ""
                 }`
+                : "none"
+
+            const eventId = `${lastAction}-${lastPlayedBy}-${handSize}-${topSig}`
 
             if (lastEventRef.current !== eventId) {
                 lastEventRef.current = eventId
@@ -109,10 +137,7 @@ export default function GameRoomPage() {
                 }
             }
         }
-
-        // --- End-of-round winner alert + scoreboard ---
         if (playerInTurn === undefined && typeof winner === "number" && !hasShownWinner) {
-            // Points per player = sum of cardPoints of the cards in their hand
             const pointsPerPlayer = roundState.hands.map(hand =>
                 hand.reduce((sum, c) => sum + cardPoints(c), 0)
             )
@@ -130,8 +155,9 @@ export default function GameRoomPage() {
 
             alert(`Winner is ${roundState.players[winner]}!\n\nScores:\n${lines}`)
             setHasShownWinner(true)
+            router.push("/lobby")
         }
-    }, [roundState, hasShownWinner])
+    }, [roundState, hasShownWinner, router])
 
     if (!roundState) {
         return <div style={{ padding: 40 }}>Loading game...</div>
@@ -147,6 +173,12 @@ export default function GameRoomPage() {
     function handlePlay(i: number, card: Card) {
         if (!isMyTurn) {
             notify("❌ It is not your turn!")
+            return
+        }
+
+        const top = round.discardPile.at(-1)
+        if (!clientCanPlay(card, top, round.currentColor)) {
+            notify("❌ You cannot play this card!")
             return
         }
 
