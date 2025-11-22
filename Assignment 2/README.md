@@ -28,7 +28,7 @@ open in browser
 ## Known bugs
 none for now
 
-## Notes
+## Notes
 - It is possible to play only one round of uno, if you wish to play more, you must leave the game and create a new game
 
 ## Requirements
@@ -62,7 +62,7 @@ Could have
 - Using consistent composition or options API — NEED TO CHECK
  
  Should have
-- The application should have a game over screen indicating the result — NEED TO CHECK
+- The application should have a game over screen indicating the result
 
 Could have 
 - Play an entire game (with score) of Uno against 1-3 players
@@ -75,7 +75,7 @@ Could have
 - Users get notifications everytime something happens
 - Server uses GraphQL as the communication protocol — NEED TO CHECK
 - Users can register and login
-- The application allows playing an entire game (with score) of Uno against 1-3 human opponents — NEED TO CHECK
+- The application allows playing an entire game (with score) of Uno against 1-3 human opponents
 
 ### Assignment 6
 - Features from Assignment 5
