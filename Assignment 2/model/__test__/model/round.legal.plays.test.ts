@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from '@jest/globals'
 import { createRound } from '../utils/test_adapter'
-import { canPlay, play } from '../../model/round'
+import { canPlay, play } from '../../src/round'
 import { shuffleBuilder } from '../utils/shuffling'
-import { Round } from '../../model/interfaces'
+import { Round } from '../../src/interfaces'
 
 describe("Legal plays", () => {
   describe("Legal plays on a numbered card", () => {

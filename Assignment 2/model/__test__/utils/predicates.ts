@@ -1,4 +1,4 @@
-import { Card, Color, Type } from '../../model/interfaces'
+import { Card, Color, Type } from '../../src/interfaces'
 
 export type CardPredicate = (_: Card | undefined) => boolean
 

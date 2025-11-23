@@ -1,6 +1,6 @@
 import { describe, it, test, expect } from '@jest/globals'
 import { createRound } from '../utils/test_adapter'
-import { Round } from '../../model/interfaces'
+import { Round } from '../../src/interfaces'
 import {
   canPlay,
   catchUnoFailure,
@@ -12,10 +12,10 @@ import {
   winner,
   canPlayAny,
   score
-} from '../../model/round'
+} from '../../src/round'
 import { deterministicShuffle, shuffleBuilder, successiveShufflers } from '../utils/shuffling'
 import * as _ from 'lodash'
-import { createInitialDeck } from '../../model/deck'
+import { createInitialDeck } from '../../src/deck'
 import { standardShuffler } from '../../utils/random_utils'
 
 describe('catching failure to say "UNO!"', () => {

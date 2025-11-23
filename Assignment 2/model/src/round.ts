@@ -161,7 +161,7 @@ export function createRound(
       direction,
       unoSaid: new Array(playerCount).fill(false),
       winner: undefined,
-      lastPlayedBy: undefined, 
+      lastPlayedBy: undefined,
       lastAction: undefined,
       shuffler,
     }

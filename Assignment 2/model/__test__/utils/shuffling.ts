@@ -1,4 +1,4 @@
-import { Card } from "../../model/interfaces"
+import { Card } from "../../src/interfaces"
 import { Shuffler, standardShuffler } from "../../utils/random_utils"
 import { CardPredicate, CardSpec, is } from "./predicates"
 import * as _ from 'lodash'

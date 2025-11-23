@@ -1,10 +1,10 @@
 import { describe, it, test, expect } from '@jest/globals'
 import { createGame } from '../utils/test_adapter'
 import { shuffleBuilder, successiveShufflers } from '../utils/shuffling'
-import { play } from '../../model/uno'
-import * as Round from '../../model/round'
+import { play } from '../../src/uno'
+import * as Round from '../../src/round'
 import * as _ from 'lodash'
-import { Game } from '../../model/interfaces'
+import { Game } from '../../src/interfaces'
 
 describe("Game set up", () => {
   const game: Game = createGame({ players: ['a', 'b', 'c', 'd'], targetScore: 200 })

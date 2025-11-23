@@ -12,6 +12,8 @@
         ]
     },
     "include": [
-        "*.ts"
+        "*.ts",
+        "src/uno.ts",
+        "src/round.ts"
     ]
 }

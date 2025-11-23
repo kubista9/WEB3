@@ -1,10 +1,10 @@
 import { describe, it, test, expect, beforeEach, jest } from '@jest/globals'
 import { createRound, createInitialDeck } from '../utils/test_adapter'
-import { canPlayAny, draw, play, topOfDiscard } from '../../model/round'
+import { canPlayAny, draw, play, topOfDiscard } from '../../src/round'
 import { deterministicShuffle as deterministicShuffler, noShuffle, shuffleBuilder, successiveShufflers } from '../utils/shuffling'
 import { is } from '../utils/predicates'
 import { standardShuffler } from '../../utils/random_utils'
-import { Round } from '../../model/interfaces'
+import { Round } from '../../src/interfaces'
 
 describe("Playing a card", () => {
   it("throws on illegal plays", () => {

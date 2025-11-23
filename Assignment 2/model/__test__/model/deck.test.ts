@@ -1,6 +1,6 @@
 import { describe, it, expect } from '@jest/globals'
 import { createInitialDeck } from '../utils/test_adapter'
-import { Card } from '../../model/interfaces'
+import { Card } from '../../src/interfaces'
 import * as _ from 'lodash'
 
 describe("Initial deck", () => {

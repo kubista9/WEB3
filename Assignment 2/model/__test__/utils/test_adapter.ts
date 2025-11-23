@@ -1,8 +1,8 @@
 import { Shuffler, standardShuffler } from '../../utils/random_utils'
-import * as deck from '../../model/deck'
-import * as round from '../../model/round'
-import * as uno from '../../model/uno'
-import { Card, Round, Game, GameProps, Deck } from '../../model/interfaces'
+import * as deck from '../../src/deck'
+import * as round from '../../src/round'
+import * as uno from '../../src/uno'
+import { Card, Round, Game, GameProps, Deck } from '../../src/interfaces'
 
 export function createInitialDeck(): Deck {
   return [...deck.createInitialDeck()]

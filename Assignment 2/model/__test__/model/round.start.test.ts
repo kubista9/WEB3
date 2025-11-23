@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals'
 import { createRound, createInitialDeck } from '../utils/test_adapter'
-import { Round } from '../../model/interfaces'
+import { Round } from '../../src/interfaces'
 import { shuffleBuilder } from '../utils/shuffling'
 import { deterministicShuffle, noShuffle, successiveShufflers } from '../utils/shuffling'
 import * as _ from 'lodash'
