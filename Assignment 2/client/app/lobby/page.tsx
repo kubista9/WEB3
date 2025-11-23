@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Cookies from "js-cookie"
-import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
-import connectWebSocket, { sendAction, setOnGameStart } from "../api/gameApi"
-import type { LobbyGame } from "../api/gameApi"
+import { useRouter } from "next/navigation"
+import Cookies from "js-cookie"
 import type { RootState } from "../store/store"
+import type { LobbyGame } from "../api/lobbyApi"
+import { connectWebSocket } from "../api/ws"
+import { lobbyApi, setOnGameStart } from "../api/lobbyApi"
 
 export default function LobbyPage() {
     const router = useRouter()
@@ -16,22 +17,19 @@ export default function LobbyPage() {
 
     useEffect(() => {
         const p = Cookies.get("player")
-
         if (!p) {
             router.push("/login")
             return
         }
-
         setPlayer(p)
     }, [router])
 
     useEffect(() => {
         connectWebSocket()
-        sendAction({ type: "GET_LOBBY" })
+        lobbyApi.getLobby()
 
-        setOnGameStart((id) => router.push(`/game/${id}`))
+        setOnGameStart((gameId) => router.push(`/game/${gameId}`))
     }, [player])
-
 
     if (!player)
         return <div style={{ padding: 40 }}>Loading...</div>
@@ -55,10 +53,7 @@ export default function LobbyPage() {
 
                 <button
                     onClick={() =>
-                        sendAction({
-                            type: "CREATE_GAME",
-                            payload: { host: player, maxPlayers },
-                        })
+                        lobbyApi.createGame(player, maxPlayers)
                     }
                     style={{ marginLeft: 10 }}
                 >
@@ -66,7 +61,7 @@ export default function LobbyPage() {
                 </button>
             </div>
 
-            {/* LOBBY LIST */}
+            {/* LIST OF GAMES */}
             <h2>Available Games</h2>
 
             {lobby.length === 0 && <p>No games available.</p>}
@@ -80,44 +75,30 @@ export default function LobbyPage() {
                         <strong>{g.name}</strong>
                         <span> ({g.players.length}/{g.maxPlayers})</span>
 
-                        {/* HOST VIEW */}
                         {isHost && alreadyJoined && (
                             <button
-                                onClick={() =>
-                                    sendAction({
-                                        type: "START_GAME",
-                                        payload: { id: g.id },
-                                    })
-                                }
+                                onClick={() => lobbyApi.startGame(g.id)}
                                 style={{ marginLeft: 10 }}
                             >
                                 Start Game
                             </button>
                         )}
 
-                        {/* GUEST VIEW */}
                         {!isHost && alreadyJoined && (
                             <span style={{ marginLeft: 10 }}>
                                 Waiting for host to start…
                             </span>
                         )}
 
-                        {/* JOIN BUTTON */}
                         {!alreadyJoined && g.players.length < g.maxPlayers && (
                             <button
-                                onClick={() =>
-                                    sendAction({
-                                        type: "JOIN_GAME",
-                                        payload: { id: g.id, player },
-                                    })
-                                }
+                                onClick={() => lobbyApi.joinGame(g.id, player)}
                                 style={{ marginLeft: 10 }}
                             >
                                 Join
                             </button>
                         )}
 
-                        {/* FULL GAME */}
                         {!alreadyJoined && g.players.length >= g.maxPlayers && (
                             <button disabled style={{ marginLeft: 10 }}>
                                 Full

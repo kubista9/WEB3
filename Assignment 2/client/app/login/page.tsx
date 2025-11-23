@@ -1,9 +1,10 @@
 "use client"
 
-import connectWebSocket, { sendAction, setOnLoginSuccess } from "../api/gameApi"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Cookies from "js-cookie"
+import { connectWebSocket } from "../api/ws"
+import { apiLogin, apiRegister, setOnLoginSuccess } from "../api/loginApi"
 
 export default function LoginPage() {
     const router = useRouter()
@@ -14,6 +15,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         connectWebSocket()
+
         setOnLoginSuccess(() => {
             Cookies.set("player", username)
             router.push("/lobby")
@@ -21,10 +23,7 @@ export default function LoginPage() {
     }, [username, router])
 
     function doLogin() {
-        sendAction({
-            type: "LOGIN",
-            payload: { username, password },
-        })
+        apiLogin(username, password)
     }
 
     function doRegister() {
@@ -32,11 +31,7 @@ export default function LoginPage() {
             alert("Passwords do not match")
             return
         }
-
-        sendAction({
-            type: "REGISTER",
-            payload: { username, password },
-        })
+        apiRegister(username, password)
     }
 
     return (
@@ -72,7 +67,9 @@ export default function LoginPage() {
                 {mode === "login" ? "Login" : "Register"}
             </button>
 
-            <button onClick={() => setMode(mode === "login" ? "register" : "login")}>
+            <button onClick={() => setMode(mode === "login" ? "register" : "login")}
+                style={{ marginLeft: 10 }}
+            >
                 Switch to {mode === "login" ? "Register" : "Login"}
             </button>
         </div>

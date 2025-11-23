@@ -1,139 +1,36 @@
 "use client"
 
-import { webSocket, WebSocketSubject } from "rxjs/webSocket"
+import { registerHandler, send, ServerMessage } from "./ws"
 import { store } from "../store/store"
-import { setLobby } from "../features/lobbySlice"
-import { setState, setGameId, setConnected } from "../features/gameSlice"
+import { setState } from "../features/gameSlice"
 import { push } from "../features/notificationSlice"
 
-export interface LobbyGame {
-    id: string
-    host: string
-    name: string
-    players: string[]
-    maxPlayers: number
-}
+registerHandler("GAME_STATE", (msg: ServerMessage) => {
+    store.dispatch(setState({ gameId: msg.gameId, state: msg.state }))
+}, "game")
 
-interface ServerMessage {
-    type:
-    | "LOBBY_UPDATE"
-    | "PLAYER_JOINED"
-    | "REGISTER_RESULT"
-    | "LOGIN_RESULT"
-    | "GAME_STARTED"
-    | "GAME_STATE"
-    | "UNO_CALLED"
-    | "UNO_PENALTY"
-    lobby?: LobbyGame[]
-    ok?: boolean
-    id?: string
-    state?: any
-    gameId?: string
-    text?: string
-}
+registerHandler("UNO_CALLED", (msg: ServerMessage) => {
+    store.dispatch(push(msg.text ?? "UNO!"))
+}, "game")
 
-export interface ClientAction {
-    type: string
-    payload?: Record<string, unknown>
-}
+registerHandler("UNO_PENALTY", (msg: ServerMessage) => {
+    store.dispatch(push(msg.text ?? "UNO penalty applied"))
+}, "game")
 
-const WS_URL = "ws://localhost:4000"
-let socket$: WebSocketSubject<any> | null = null
+export const gameApi = {
+    play(gameId: any, player: string, index: number, color?: string) {
+        send({ type: "PLAY", payload: { gameId, player, index, color } })
+    },
 
-let onLoginSuccess: (() => void) | null = null
-let onGameStart: ((id: string) => void) | null = null
+    draw(gameId: any, player: string) {
+        send({ type: "DRAW", payload: { gameId, player } })
+    },
 
-export function setOnLoginSuccess(cb: () => void) {
-    onLoginSuccess = cb
-}
+    sayUno(gameId: any, player: string) {
+        send({ type: "SAY_UNO", payload: { gameId, player } })
+    },
 
-export function setOnGameStart(cb: (id: string) => void) {
-    onGameStart = cb
-}
-
-let isConnecting = false
-
-export default function connectWebSocket() {
-    if (socket$ || isConnecting) return socket$
-    isConnecting = true
-
-    socket$ = webSocket({ url: WS_URL })
-
-    socket$.subscribe({
-        next: (msg: ServerMessage) => {
-            console.log("WS -> client received:", msg)
-
-            switch (msg.type) {
-                case "LOBBY_UPDATE":
-                    if (msg.lobby) store.dispatch(setLobby(msg.lobby))
-                    break
-
-                case "PLAYER_JOINED":
-                    store.dispatch(push("A player joined the lobby"))
-                    break
-
-                case "REGISTER_RESULT":
-                    store.dispatch(push(msg.ok ? "Registered successfully" : "Username already exists"))
-                    break
-
-                case "LOGIN_RESULT":
-                    if (msg.ok) {
-                        store.dispatch(push("Logged in successfully"))
-                        onLoginSuccess?.()
-                    } else {
-                        store.dispatch(push("Invalid login"))
-                    }
-                    break
-
-                case "GAME_STARTED":
-                    if (msg.id) {
-                        store.dispatch(setGameId(msg.id))
-                        onGameStart?.(msg.id)
-                    }
-                    break
-
-                case "GAME_STATE":
-                    if (msg.state && msg.gameId) {
-                        store.dispatch(
-                            setState({
-                                gameId: msg.gameId,
-                                state: msg.state,
-                            })
-                        )
-                    }
-                    break
-
-                case "UNO_CALLED":
-                    store.dispatch(push(msg.text ?? "UNO!"))
-                    break
-
-                case "UNO_PENALTY":
-                    store.dispatch(push(msg.text ?? "UNO penalty applied"))
-                    break
-            }
-        },
-
-        error: (err) => {
-            console.error("WS error:", err)
-            store.dispatch(setConnected(false))
-        },
-
-        complete: () => {
-            console.warn("WS connection closed")
-            store.dispatch(setConnected(false))
-            socket$ = null
-        },
-    })
-
-    store.dispatch(setConnected(true))
-    return socket$
-}
-
-export function sendAction(action: ClientAction) {
-    console.log("CLIENT -> WS sending:", action)
-    if (!socket$) {
-        console.warn("Trying to send over WS before connection exists")
-        return
+    callOut(gameId: any, accuser: string, accused: string) {
+        send({ type: "CALL_OUT", payload: { gameId, accuser, accused } })
     }
-    socket$.next(action)
 }

@@ -1,12 +1,13 @@
 "use client"
 
-import type { Card, Round } from "../../../../model/dist/model/interfaces"
-import connectWebSocket, { sendAction } from "../../api/gameApi"
-import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
-import type { RootState } from "../../store/store"
+import { useParams, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import Cookies from "js-cookie"
+import type { RootState } from "../../store/store"
+import type { Card, Round } from "../../../../model/dist/model/interfaces"
+import { connectWebSocket } from "../../api/ws"
+import { gameApi } from "../../api/gameApi"
 
 const COLORS = ["RED", "GREEN", "BLUE", "YELLOW"] as const
 const colorMap: Record<string, string> = {
@@ -18,17 +19,13 @@ const colorMap: Record<string, string> = {
 
 function cardPoints(card: Card): number {
     switch (card.type) {
-        case "NUMBERED":
-            return card.number
+        case "NUMBERED": return card.number
         case "DRAW":
         case "REVERSE":
-        case "SKIP":
-            return 20
+        case "SKIP": return 20
         case "WILD":
-        case "WILD DRAW":
-            return 50
-        default:
-            return 0
+        case "WILD DRAW": return 50
+        default: return 0
     }
 }
 
@@ -36,17 +33,11 @@ function describeCard(card: Card | undefined): string {
     if (!card) return "a card"
     const hasColor = "color" in card && (card as any).color
     const colorPart = hasColor ? `${(card as any).color} ` : ""
-    if (card.type === "NUMBERED") {
-        return `${colorPart}${card.number}`
-    }
+    if (card.type === "NUMBERED") return `${colorPart}${card.number}`
     return `${colorPart}${card.type}`
 }
 
-function clientCanPlay(
-    card: Card,
-    top: Card | undefined,
-    currentColor: string | undefined
-): boolean {
+function clientCanPlay(card: Card, top: Card | undefined, currentColor: string | undefined): boolean {
     if (card.type === "WILD" || card.type === "WILD DRAW") return true
 
     const cardColor = "color" in card ? (card as any).color : undefined
@@ -63,9 +54,7 @@ function clientCanPlay(
         (card.type === "SKIP" && top?.type === "SKIP") ||
         (card.type === "DRAW" && top?.type === "DRAW") ||
         (card.type === "REVERSE" && top?.type === "REVERSE")
-    ) {
-        return true
-    }
+    ) return true
 
     if (top && (top.type === "WILD" || top.type === "WILD DRAW")) {
         if (activeColor && cardColor === activeColor) return true
@@ -78,15 +67,14 @@ export default function GameRoomPage() {
     const { id } = useParams()
     const router = useRouter()
     const player = Cookies.get("player") ?? "Unknown"
+
     const roundState: Round | null = useSelector((state: RootState) => state.game.state)
 
     const [showPicker, setShowPicker] = useState(false)
     const [pendingCard, setPendingCard] = useState<{ index: number; card: Card } | null>(null)
-
     const [localNote, setLocalNote] = useState<string | null>(null)
 
     const lastEventRef = useRef<string | null>(null)
-
     const [hasShownWinner, setHasShownWinner] = useState(false)
 
     function notify(msg: string) {
@@ -115,28 +103,22 @@ export default function GameRoomPage() {
             winner
         } = roundState
 
-        if (lastAction && lastPlayedBy !== undefined && lastPlayedBy >= 0) {
+        if (lastAction && typeof lastPlayedBy === "number") {
             const handSize = hands[lastPlayedBy]?.length ?? 0
             const top = discardPile[discardPile.length - 1]
 
-            const topSig = top
-                ? `${top.type}-${"color" in top ? (top as any).color ?? "" : ""}-${top.type === "NUMBERED" ? (top as any).number ?? "" : ""
-                }`
-                : "none"
+            const sig = `${lastAction}-${lastPlayedBy}-${handSize}-${top?.type}-${(top as any)?.color ?? ""}-${(top as any)?.number ?? ""}`
 
-            const eventId = `${lastAction}-${lastPlayedBy}-${handSize}-${topSig}`
+            if (lastEventRef.current !== sig) {
+                lastEventRef.current = sig
 
-            if (lastEventRef.current !== eventId) {
-                lastEventRef.current = eventId
                 const actor = players[lastPlayedBy]
 
-                if (lastAction === "play") {
-                    notify(`${actor} played ${describeCard(top)}`)
-                } else if (lastAction === "draw") {
-                    notify(`${actor} drew a card`)
-                }
+                if (lastAction === "play") notify(`${actor} played ${describeCard(top)}`)
+                if (lastAction === "draw") notify(`${actor} drew a card`)
             }
         }
+
         if (playerInTurn === undefined && typeof winner === "number" && !hasShownWinner) {
             const pointsPerPlayer = roundState.hands.map(hand =>
                 hand.reduce((sum, c) => sum + cardPoints(c), 0)
@@ -149,9 +131,7 @@ export default function GameRoomPage() {
                 }))
                 .sort((a, b) => b.points - a.points)
 
-            const lines = scoreboard
-                .map(s => `${s.name}: ${s.points} points`)
-                .join("\n")
+            const lines = scoreboard.map(s => `${s.name}: ${s.points} points`).join("\n")
 
             alert(`Winner is ${roundState.players[winner]}!\n\nScores:\n${lines}`)
             setHasShownWinner(true)
@@ -159,9 +139,8 @@ export default function GameRoomPage() {
         }
     }, [roundState, hasShownWinner, router])
 
-    if (!roundState) {
+    if (!roundState)
         return <div style={{ padding: 40 }}>Loading game...</div>
-    }
 
     const round = roundState
     const playerIndex = round.players.indexOf(player)
@@ -171,15 +150,11 @@ export default function GameRoomPage() {
     const last = round.lastPlayedBy
 
     function handlePlay(i: number, card: Card) {
-        if (!isMyTurn) {
-            notify("It is not your turn!")
-            return
-        }
+        if (!isMyTurn) return notify("It is not your turn!")
 
         const top = round.discardPile.at(-1)
         if (!clientCanPlay(card, top, round.currentColor)) {
-            notify("You cannot play this card!")
-            return
+            return notify("You cannot play this card!")
         }
 
         if (card.type === "WILD" || card.type === "WILD DRAW") {
@@ -188,69 +163,27 @@ export default function GameRoomPage() {
             return
         }
 
-        sendAction({
-            type: "PLAY",
-            payload: {
-                gameId: id,
-                player,
-                index: i
-            }
-        })
+        gameApi.play(id, player, i)
     }
 
     function drawCard() {
-        if (!isMyTurn) {
-            notify("It is not your turn!")
-            return
-        }
-
-        sendAction({
-            type: "DRAW",
-            payload: { gameId: id, player }
-        })
+        if (!isMyTurn) return notify("It is not your turn!")
+        gameApi.draw(id, player)
     }
 
     function sayUnoClick() {
-        const handSize = hand.length
-
-        if (!isMyTurn) {
-            notify("You can only say UNO on your turn!")
-            return
-        }
-
-        if (handSize !== 1) {
-            notify("You can only say UNO when you have exactly 1 card!")
-            return
-        }
-
-        sendAction({
-            type: "SAY_UNO",
-            payload: { gameId: id, player }
-        })
+        if (!isMyTurn) return notify("You can only say UNO on your turn!")
+        if (hand.length !== 1) return notify("You must have exactly 1 card!")
+        gameApi.sayUno(id, player)
     }
 
     function callOutClick() {
-        if (last === undefined) {
-            notify("No player to call out!")
-            return
-        }
+        if (last === undefined) return notify("No player to call out!")
+        const lastHand = round.hands[last]?.length ?? 0
+        const lastUno = round.unoSaid[last]
 
-        const lastHandSize = round.hands[last]?.length ?? 0
-        const lastUnoSaid = round.unoSaid[last]
-
-        if (!(lastHandSize === 1 && !lastUnoSaid)) {
-            notify("Nobody forgot to say UNO!")
-            return
-        }
-
-        sendAction({
-            type: "CALL_OUT",
-            payload: {
-                gameId: id,
-                accuser: player,
-                accused: round.players[last]
-            }
-        })
+        if (!(lastHand === 1 && !lastUno)) return notify("Nobody forgot UNO!")
+        gameApi.callOut(id, player, round.players[last])
     }
 
     return (
@@ -259,7 +192,7 @@ export default function GameRoomPage() {
 
             <h2>Current Player: {round.players[round.playerInTurn ?? 0]}</h2>
 
-            {/* DISCARD PILE */}
+            {/* Discard card */}
             <div
                 style={{
                     margin: "25px auto",
@@ -276,13 +209,12 @@ export default function GameRoomPage() {
                     color: "white"
                 }}
             >
-                {topCard?.type}
-                {topCard?.type === "NUMBERED" && ` ${topCard.number}`}
+                {topCard?.type}{topCard?.type === "NUMBERED" && ` ${topCard.number}`}
             </div>
 
             <div style={{ marginBottom: 20 }}>Discard Pile</div>
 
-            {/* PLAYER HAND */}
+            {/* Player hand */}
             <div
                 style={{
                     display: "flex",
@@ -321,9 +253,8 @@ export default function GameRoomPage() {
                 })}
             </div>
 
-            {/* ACTION BUTTONS */}
+            {/* Action buttons */}
             <div style={{ marginTop: 30, display: "flex", gap: 20, justifyContent: "center" }}>
-                {/* DRAW BUTTON */}
                 <button
                     onClick={drawCard}
                     style={{
@@ -338,36 +269,34 @@ export default function GameRoomPage() {
                     Draw Card
                 </button>
 
-                {/* SAY UNO – ALWAYS VISIBLE */}
                 <button
                     onClick={sayUnoClick}
                     style={{
                         padding: "10px 30px",
                         borderRadius: 10,
                         border: "2px solid black",
-                        cursor: "pointer",
-                        fontWeight: "bold"
+                        fontWeight: "bold",
+                        cursor: "pointer"
                     }}
                 >
                     Say UNO!
                 </button>
 
-                {/* CALL OUT – ALWAYS VISIBLE */}
                 <button
                     onClick={callOutClick}
                     style={{
                         padding: "10px 30px",
                         borderRadius: 10,
                         border: "2px solid black",
-                        cursor: "pointer",
-                        fontWeight: "bold"
+                        fontWeight: "bold",
+                        cursor: "pointer"
                     }}
                 >
                     Call Out UNO!
                 </button>
             </div>
 
-            {/* LOCAL NOTIFICATION TOAST */}
+            {/* Toast */}
             {localNote && (
                 <div
                     style={{
@@ -385,9 +314,10 @@ export default function GameRoomPage() {
                 </div>
             )}
 
-            {/* WILD COLOR PICKER */}
+            {/* Wild picker modal */}
             {showPicker && pendingCard && (
                 <div
+                    onClick={() => setShowPicker(false)}
                     style={{
                         position: "fixed",
                         top: 0,
@@ -397,33 +327,24 @@ export default function GameRoomPage() {
                         background: "rgba(0,0,0,0.5)",
                         display: "flex",
                         justifyContent: "center",
-                        alignItems: "center",
+                        alignItems: "center"
                     }}
-                    onClick={() => setShowPicker(false)}
                 >
                     <div
+                        onClick={(e) => e.stopPropagation()}
                         style={{
                             background: "white",
                             padding: 20,
                             borderRadius: 10,
                             display: "flex",
-                            gap: 20,
+                            gap: 20
                         }}
-                        onClick={(e) => e.stopPropagation()}
                     >
-                        {COLORS.map((c) => (
+                        {COLORS.map(c => (
                             <button
                                 key={c}
                                 onClick={() => {
-                                    sendAction({
-                                        type: "PLAY",
-                                        payload: {
-                                            index: pendingCard.index,
-                                            gameId: id,
-                                            player,
-                                            color: c
-                                        }
-                                    })
+                                    gameApi.play(id, player, pendingCard.index, c)
                                     setShowPicker(false)
                                     setPendingCard(null)
                                 }}
