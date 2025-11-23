@@ -21,32 +21,28 @@ export function play(index: number, chosenColor: string | undefined, round: Roun
   if (hasColor && chosenColor !== undefined)
     throw new Error("Cannot specify color on a colored card")
 
+  if ((isWild || isWildDraw) && chosenColor === undefined)
+    throw new Error("Must specify color on a wild card")
+
   const isInternalAutoPlay =
     round.lastAction !== undefined ||
     round.lastPlayedBy !== undefined ||
     round.hands.some(h => h.length === 1)
-  if ((isWild || isWildDraw) && chosenColor === undefined && !isInternalAutoPlay)
-    throw new Error("Must specify color on a wild card")
 
-  const internalPlay = isInternalAutoPlay
   if (!isInternalAutoPlay && !canPlay(index, round))
     throw new Error("Illegal play")
 
-  if ((isWild || isWildDraw) && chosenColor === undefined) {
-    const topCard = topOfDiscard(round)
-    const fallbackColor =
-      round.currentColor ||
-      (topCard && "color" in topCard ? (topCard as any).color : undefined)
-    chosenColor = fallbackColor ?? "RED"
-  }
-
   const newHands = _.cloneDeep(round.hands)
   newHands[currentPlayer] = _.filter(hand, (_, i) => i !== index)
+
   const newDiscardPile = _.concat(round.discardPile, card)
 
   let newColor = round.currentColor
-  if (isWild || isWildDraw) newColor = chosenColor
-  else if ("color" in card) newColor = (card as any).color
+  if (isWild || isWildDraw) {
+    newColor = chosenColor
+  } else if (hasColor) {
+    newColor = (card as any).color
+  }
 
   let direction = round.direction
   let nextPlayer = currentPlayer
@@ -58,8 +54,9 @@ export function play(index: number, chosenColor: string | undefined, round: Roun
   }
 
   nextPlayer = (currentPlayer + direction + round.playerCount) % round.playerCount
-  if (card.type === "SKIP" || treatAsSkip)
+  if (card.type === "SKIP" || treatAsSkip) {
     nextPlayer = (nextPlayer + direction + round.playerCount) % round.playerCount
+  }
 
   let updatedHands = newHands
   let updatedDrawPile = _.clone(round.drawPile)
@@ -106,7 +103,7 @@ export function createRound(
   dealer: number,
   shuffler?: Shuffler<Card>,
   cardsPerPlayer: number = 7,
-  lastPlayedBy?: number,
+  _lastPlayedBy?: number
 ): Round {
   const playerCount = players.length
   if (playerCount < 2) throw new Error("Round requires at least 2 players")
@@ -164,7 +161,7 @@ export function createRound(
       direction,
       unoSaid: new Array(playerCount).fill(false),
       winner: undefined,
-      lastPlayedBy: lastPlayedBy ?? dealer,
+      lastPlayedBy: undefined, 
       lastAction: undefined,
       shuffler,
     }
