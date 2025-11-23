@@ -235,9 +235,7 @@ export function handleMessage(
 
             const playerIndex = game.players.indexOf(player)
             if (playerIndex === -1) break
-
-            // Small safety: only allow SAY_UNO when player is realistically
-            // about to have / has UNO (2 cards before play, or 1 after play)
+            
             const cardsInHand = round.hands[playerIndex]?.length ?? 0
             if (cardsInHand > 2) {
                 console.log(`IGNORED SAY_UNO from ${player} — has ${cardsInHand} cards`)

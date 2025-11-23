@@ -172,13 +172,13 @@ export default function GameRoomPage() {
 
     function handlePlay(i: number, card: Card) {
         if (!isMyTurn) {
-            notify("❌ It is not your turn!")
+            notify("It is not your turn!")
             return
         }
 
         const top = round.discardPile.at(-1)
         if (!clientCanPlay(card, top, round.currentColor)) {
-            notify("❌ You cannot play this card!")
+            notify("You cannot play this card!")
             return
         }
 
@@ -200,7 +200,7 @@ export default function GameRoomPage() {
 
     function drawCard() {
         if (!isMyTurn) {
-            notify("❌ It is not your turn!")
+            notify("It is not your turn!")
             return
         }
 
@@ -214,12 +214,12 @@ export default function GameRoomPage() {
         const handSize = hand.length
 
         if (!isMyTurn) {
-            notify("❌ You can only say UNO on your turn!")
+            notify("You can only say UNO on your turn!")
             return
         }
 
         if (handSize !== 1) {
-            notify("❌ You can only say UNO when you have exactly 1 card!")
+            notify("You can only say UNO when you have exactly 1 card!")
             return
         }
 
@@ -231,7 +231,7 @@ export default function GameRoomPage() {
 
     function callOutClick() {
         if (last === undefined) {
-            notify("❌ No player to call out!")
+            notify("No player to call out!")
             return
         }
 
@@ -239,7 +239,7 @@ export default function GameRoomPage() {
         const lastUnoSaid = round.unoSaid[last]
 
         if (!(lastHandSize === 1 && !lastUnoSaid)) {
-            notify("❌ Nobody forgot to say UNO!")
+            notify("Nobody forgot to say UNO!")
             return
         }
 
