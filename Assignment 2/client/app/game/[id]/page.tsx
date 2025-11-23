@@ -5,28 +5,16 @@ import { useParams, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import Cookies from "js-cookie"
 import type { RootState } from "../../store/store"
-import type { Card, Round } from "../../../../model/dist/model/interfaces"
+import type { Card, Round, Color } from "@model/dist/model/interfaces"
 import { connectWebSocket } from "../../api/ws"
 import { gameApi } from "../../api/gameApi"
+import { cardValue, canPlay } from "@model/src/round"
 
-const COLORS = ["RED", "GREEN", "BLUE", "YELLOW"] as const
 const colorMap: Record<string, string> = {
     RED: "#e74c3c",
     GREEN: "#2ecc71",
     BLUE: "#3498db",
     YELLOW: "#c1c100"
-}
-
-function cardPoints(card: Card): number {
-    switch (card.type) {
-        case "NUMBERED": return card.number
-        case "DRAW":
-        case "REVERSE":
-        case "SKIP": return 20
-        case "WILD":
-        case "WILD DRAW": return 50
-        default: return 0
-    }
 }
 
 function describeCard(card: Card | undefined): string {
@@ -35,32 +23,6 @@ function describeCard(card: Card | undefined): string {
     const colorPart = hasColor ? `${(card as any).color} ` : ""
     if (card.type === "NUMBERED") return `${colorPart}${card.number}`
     return `${colorPart}${card.type}`
-}
-
-function clientCanPlay(card: Card, top: Card | undefined, currentColor: string | undefined): boolean {
-    if (card.type === "WILD" || card.type === "WILD DRAW") return true
-
-    const cardColor = "color" in card ? (card as any).color : undefined
-    const topColor = top && "color" in top ? (top as any).color : undefined
-    const activeColor = currentColor ?? topColor
-
-    if (card.type === "NUMBERED" && top?.type === "NUMBERED") {
-        if (card.number === (top as any).number) return true
-    }
-
-    if (activeColor && cardColor === activeColor) return true
-
-    if (
-        (card.type === "SKIP" && top?.type === "SKIP") ||
-        (card.type === "DRAW" && top?.type === "DRAW") ||
-        (card.type === "REVERSE" && top?.type === "REVERSE")
-    ) return true
-
-    if (top && (top.type === "WILD" || top.type === "WILD DRAW")) {
-        if (activeColor && cardColor === activeColor) return true
-    }
-
-    return false
 }
 
 export default function GameRoomPage() {
@@ -121,7 +83,7 @@ export default function GameRoomPage() {
 
         if (playerInTurn === undefined && typeof winner === "number" && !hasShownWinner) {
             const pointsPerPlayer = roundState.hands.map(hand =>
-                hand.reduce((sum, c) => sum + cardPoints(c), 0)
+                hand.reduce((sum, c) => sum + cardValue(c), 0)
             )
 
             const scoreboard = roundState.players
@@ -153,7 +115,7 @@ export default function GameRoomPage() {
         if (!isMyTurn) return notify("It is not your turn!")
 
         const top = round.discardPile.at(-1)
-        if (!clientCanPlay(card, top, round.currentColor)) {
+        if (!canPlay(i, round)) {
             return notify("You cannot play this card!")
         }
 
@@ -340,16 +302,16 @@ export default function GameRoomPage() {
                             gap: 20
                         }}
                     >
-                        {COLORS.map(c => (
+                        {Object.entries(colorMap).map(([c, hex]) => (
                             <button
                                 key={c}
                                 onClick={() => {
-                                    gameApi.play(id, player, pendingCard.index, c)
+                                    gameApi.play(id, player, pendingCard.index, c as Color)
                                     setShowPicker(false)
                                     setPendingCard(null)
                                 }}
                                 style={{
-                                    background: c.toLowerCase(),
+                                    background: hex,
                                     color: "white",
                                     padding: 20,
                                     borderRadius: 10,

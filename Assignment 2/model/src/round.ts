@@ -369,7 +369,7 @@ export function score(round: Round): number | undefined {
   )
 }
 
-function cardValue(card: Card): number {
+export function cardValue(card: Card): number {
   switch (card.type) {
     case "NUMBERED":
       return card.number
