@@ -4,8 +4,8 @@ import { useEffect, useState } from "react"
 import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
-import connectWebSocket, { sendAction, setOnGameStart } from "../utils/gameApi"
-import type { LobbyGame } from "../utils/gameApi"
+import connectWebSocket, { sendAction, setOnGameStart } from "../api/gameApi"
+import type { LobbyGame } from "../api/gameApi"
 import type { RootState } from "../store/store"
 
 export default function LobbyPage() {

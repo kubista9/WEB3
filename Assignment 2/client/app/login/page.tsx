@@ -1,9 +1,9 @@
 "use client"
 
+import connectWebSocket, { sendAction, setOnLoginSuccess } from "../api/gameApi"
 import { useEffect, useState } from "react"
-import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
-import connectWebSocket, { sendAction, setOnLoginSuccess } from "../utils/gameApi"
+import Cookies from "js-cookie"
 
 export default function LoginPage() {
     const router = useRouter()

@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import type { Card, Round } from "../../../../model/dist/model/interfaces"
+import connectWebSocket, { sendAction } from "../../api/gameApi"
 import { useParams, useRouter } from "next/navigation"
+import { useEffect, useState, useRef } from "react"
+import type { RootState } from "../../store/store"
 import { useSelector } from "react-redux"
 import Cookies from "js-cookie"
-import type { RootState } from "../../store/store"
-import type { Card, Round } from "../../../../model/dist/model/interfaces"
-import connectWebSocket, { sendAction } from "../../utils/gameApi"
 
 const COLORS = ["RED", "GREEN", "BLUE", "YELLOW"] as const
 const colorMap: Record<string, string> = {

@@ -1,5 +1,5 @@
+import type { Round } from "../../../model/dist/model/interfaces"
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
-import type { Round } from "../../../../model/dist/model/interfaces"
 
 export interface GameState {
     state: Round | null

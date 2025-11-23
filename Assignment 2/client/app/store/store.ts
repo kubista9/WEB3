@@ -1,7 +1,7 @@
+import notificationReducer from "../features/notificationSlice"
 import { configureStore } from "@reduxjs/toolkit"
-import gameReducer from "../features/game/gameSlice"
-import lobbyReducer from "../features/lobby/lobbySlice"
-import notificationReducer from "../features/notifications/notificationSlice"
+import lobbyReducer from "../features/lobbySlice"
+import gameReducer from "../features/gameSlice"
 
 export const store = configureStore({
     reducer: {

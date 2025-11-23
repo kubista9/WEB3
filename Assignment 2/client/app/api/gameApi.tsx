@@ -2,9 +2,9 @@
 
 import { webSocket, WebSocketSubject } from "rxjs/webSocket"
 import { store } from "../store/store"
-import { setLobby } from "../features/lobby/lobbySlice"
-import { setState, setGameId, setConnected } from "../features/game/gameSlice"
-import { push } from "../features/notifications/notificationSlice"
+import { setLobby } from "../features/lobbySlice"
+import { setState, setGameId, setConnected } from "../features/gameSlice"
+import { push } from "../features/notificationSlice"
 
 export interface LobbyGame {
     id: string
