@@ -8,8 +8,6 @@ let initialGame: Game = createGame({ players: ['A', 'B', 'C'] })
 
 export const game$ = actions$.pipe(
   scan((state: Game, action) => {
-    console.log("Login requested from" + action.payload.username)
-    console.log("Register requested from" + action.payload.username)
     switch (action.type) {
       case 'PLAY':
         try {
@@ -35,5 +33,4 @@ export const game$ = actions$.pipe(
 export let currentState: Game = initialGame
 game$.subscribe((newState) => {
   currentState = newState
-  console.log('Updated State:', newState)
 })

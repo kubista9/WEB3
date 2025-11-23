@@ -59,8 +59,6 @@ export function handleMessage(
         return
     }
 
-    console.log("WS ACTION =>", action)
-
     switch (action.type) {
         case "REGISTER": {
             const ok = register(action.payload.username, action.payload.password)
@@ -172,9 +170,6 @@ export function handleMessage(
             if (playerIndex === -1) break
 
             if (round.playerInTurn !== playerIndex) {
-                console.log(
-                    `IGNORED PLAY from ${player} — not their turn (currentTurn = ${round.playerInTurn})`
-                )
                 break
             }
 
@@ -204,9 +199,6 @@ export function handleMessage(
             if (playerIndex === -1) break
 
             if (round.playerInTurn !== playerIndex) {
-                console.log(
-                    `IGNORED DRAW from ${player} — not their turn (currentTurn = ${round.playerInTurn})`
-                )
                 break
             }
 
@@ -235,10 +227,9 @@ export function handleMessage(
 
             const playerIndex = game.players.indexOf(player)
             if (playerIndex === -1) break
-            
+
             const cardsInHand = round.hands[playerIndex]?.length ?? 0
             if (cardsInHand > 2) {
-                console.log(`IGNORED SAY_UNO from ${player} — has ${cardsInHand} cards`)
                 break
             }
 

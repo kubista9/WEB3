@@ -13,5 +13,5 @@ startWebSocketServer(server)
 
 const PORT = 4000
 server.listen(PORT, () => {
-    console.log(`🔥 UNO server (HTTP + WS) listening on ${PORT}`)
+    console.log(`UNO server (HTTP + WS) listening on ${PORT}`)
 })

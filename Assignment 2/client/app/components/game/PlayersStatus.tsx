@@ -17,7 +17,7 @@ export default function PlayersStatus({
 
             <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
                 {players.map((p, i) => {
-                    if (p === me) return null // don't show myself here
+                    if (p === me) return null
 
                     const isTurn = currentPlayerIndex === i
                     const cardCount = hands[i]?.length ?? 0

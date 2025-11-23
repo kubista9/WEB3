@@ -1,6 +1,6 @@
 # UNO Game Project ( Functional )
 
-A multiplayer UNO card game implemented with Next.js, GraphQL, Node.js, Redux, Apollo, Lodash
+A multiplayer UNO card game implemented with Next.js, GraphQL, Node.js, Redux, Lodash
 
 ## How to run
 
@@ -25,11 +25,9 @@ open in browser
 - create a game
 - play
 
-## Known bugs
-none for now
-
 ## Notes
 - There is only local database, so if you register as a user and you stop the server from running, you will have to register again
+- Game over screen is implemented as an alert()
 
 ## Requirements
 
@@ -38,13 +36,9 @@ none for now
 - Defines functions that manipulate data according to the UNO rules
 - Uses lodash
 - Uses only pure functions
-
-Should have
-- Functions should be written in functional style — NEED TO CHECK
+- Functions should be written in functional style
 - Say UNO Functionality
-
-Could have
-- Make as much of the test suite as relevant pass
+- Make as much of the test suite as relevant pass ( 16 failed, 169 passed )
 
 ### Assignment 5
 - Uses model from Assignment 4
@@ -52,20 +46,14 @@ Could have
 - Uses RxJS for handling messages from the server
 - Uses React for rendering
 - Retains the features from assignments 1–3
-- The implementation should use React for rendering ( Shoud have )
 
 #### From Assignment 2:
 - The player should be able to play one round of Uno against 1-3 players
 - The play should proceed according to as much of the official Uno rules you implemented in assignment 1
 - Screen for setting up a game (lobby)
 - Screen for playing (game)
-- Using consistent composition or options API — NEED TO CHECK
- 
- Should have
+- Using consistent composition or options API —----------- Not Vue ----------------
 - The application should have a game over screen indicating the result
-
-Could have 
-- Play an entire game (with score) of Uno against 1-3 players
 
 #### From Assignment 3:
 - Can play against 1–3 human opponents
@@ -73,27 +61,22 @@ Could have
 - Users can create a game
 - Users can join existing games
 - Users get notifications everytime something happens
-- Server uses GraphQL as the communication protocol — NEED TO CHECK
+- Server uses GraphQL as the communication protocol — NEED TO CHECK, USING WEBSOCKETS ------------
 - Users can register and login
-- The application allows playing an entire game (with score) of Uno against 1-3 human opponents
 
 ### Assignment 6
 - Features from Assignment 5
-- Uses Next.js for server-side rendering — NEED TO CHECK
-- Works with “npm run dev” and “npm run build; npm run start” — NEED TO CHECK
+- Uses Next.js for server-side rendering —---- NEED TO CHECK, PROBABLY NOT ---------------------
+- Works with “npm run dev” and “npm run build; npm run start” —-- WARNINGS ------
 
-Should have
-- The implementation should use both server and client components — NEED TO CHECK
-- The design should make deliberate choices of when to use static vs dynamic pages — NEED TO CHECK
+Should have --------- ASK ----------------------
+- The implementation should use both server and client components 
+- The design should make deliberate choices of when to use static vs dynamic pages
 
 Could have
-- The implementation could have its API implemented in Next.js
+- The implementation could have its API implemented in Next.js ------- WEBSOCKET -------------------
 
-## Tests passed
-
-- 16 failed, 169 passed (18.11)
-
-## Commands for development
+## Commands for developmentne
 
 to install
 

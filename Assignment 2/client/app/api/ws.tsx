@@ -39,8 +39,6 @@ export function connectWebSocket() {
 
     socket$.subscribe({
         next: (msg: ServerMessage) => {
-            console.log("WS ->", msg)
-
             if (loginHandlers.has(msg.type))
                 loginHandlers.get(msg.type)!(msg)
 
