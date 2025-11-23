@@ -1,12 +1,12 @@
 import { lobbyApi } from "./../../api/lobbyApi"
 
-interface Props {
+interface CreateGameProps {
     player: string
     maxPlayers: number
     setMaxPlayers: (n: number) => void
 }
 
-export default function CreateGame({ player, maxPlayers, setMaxPlayers }: Props) {
+export default function CreateGame({ player, maxPlayers, setMaxPlayers }: CreateGameProps) {
     return (
         <div style={{ marginBottom: 20 }}>
             <select

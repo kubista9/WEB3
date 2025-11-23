@@ -1,7 +1,7 @@
 "use client"
 
-import { registerHandler, send } from "./ws"
 import { push } from "../features/notificationSlice"
+import { registerHandler, send } from "./ws"
 
 let onLoginSuccess: (() => void) | null = null
 

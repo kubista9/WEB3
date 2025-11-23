@@ -1,9 +1,9 @@
 "use client"
 
 import { registerHandler, send, ServerMessage } from "./ws"
-import { store } from "../store/store"
-import { setState } from "../features/gameSlice"
 import { push } from "../features/notificationSlice"
+import { setState } from "../features/gameSlice"
+import { store } from "../store/store"
 
 registerHandler("GAME_STATE", (msg: ServerMessage) => {
     store.dispatch(setState({ gameId: msg.gameId, state: msg.state }))

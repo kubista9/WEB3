@@ -17,10 +17,7 @@ export default function Hand({ hand, isMyTurn, onPlay }: HandProps) {
             }}
         >
             {hand.map((card, i) => {
-                const bg =
-                    "color" in card && card.color
-                        ? card.color.toLowerCase()
-                        : "#555"
+                const bg = "color" in card && card.color ? card.color.toLowerCase() : "#555"
 
                 return (
                     <button

@@ -1,12 +1,12 @@
 import type { LobbyGame } from "../../api/lobbyApi"
 import GameListItem from "./Game"
 
-interface Props {
+interface GameListProps {
     lobby: LobbyGame[]
     player: string
 }
 
-export default function GameList({ lobby, player }: Props) {
+export default function GameList({ lobby, player }: GameListProps) {
     return (
         <>
             <h2>Available Games</h2>

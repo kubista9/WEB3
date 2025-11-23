@@ -1,9 +1,9 @@
 "use client"
 
 import { registerHandler, send, ServerMessage } from "./ws"
-import { store } from "../store/store"
-import { setLobby } from "../features/lobbySlice"
 import { push } from "../features/notificationSlice"
+import { setLobby } from "../features/lobbySlice"
+import { store } from "../store/store"
 
 export interface LobbyGame {
     id: string

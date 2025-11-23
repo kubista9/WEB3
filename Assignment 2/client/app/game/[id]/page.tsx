@@ -9,18 +9,19 @@ import type { Card, Round, Color } from "@model/dist/model/interfaces"
 import { connectWebSocket } from "../../api/ws"
 import { gameApi } from "../../api/gameApi"
 import { cardValue, canPlay } from "@model/src/round"
-
 import DiscardCard from "../../components/game/DiscardPile"
 import Hand from "../../components/game/Hand"
 import ActionButtons from "../../components/game/ActionButtons"
 import Toast from "../../components/game/Notification"
 import ColorPicker from "../../components/game/ColorPicker"
+import GameHeader from "../../components/game/GameHeader"
+import PlayersStatus from "../../components/game/PlayersStatus"
 
 const colorMap: Record<string, string> = {
     RED: "#e74c3c",
     GREEN: "#2ecc71",
     BLUE: "#3498db",
-    YELLOW: "#c1c100"
+    YELLOW: "#888800ff"
 }
 
 function describeCard(card: Card | undefined): string {
@@ -153,9 +154,18 @@ export default function GameRoomPage() {
 
     return (
         <div style={{ padding: 40, textAlign: "center" }}>
-            <h1>Uno Game</h1>
+            <GameHeader
+                player={player}
+                round={round}
+            />
 
-            <h2>Current Player: {round.players[round.playerInTurn ?? 0]}</h2>
+            <PlayersStatus
+                players={round.players}
+                hands={round.hands}
+                currentPlayerIndex={round.playerInTurn}
+                me={player}
+            />
+
 
             <DiscardCard topCard={topCard} currentColor={round.currentColor as Color} />
 

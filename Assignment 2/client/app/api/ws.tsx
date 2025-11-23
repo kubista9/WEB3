@@ -1,8 +1,8 @@
 "use client"
 
 import { webSocket, WebSocketSubject } from "rxjs/webSocket"
+import { setConnected } from "../features/gameSlice"
 import { store } from "../store/store"
-import { setConnected, setGameId, setState } from "../features/gameSlice"
 
 export interface ServerMessage {
     type: string

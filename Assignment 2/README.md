@@ -29,7 +29,7 @@ open in browser
 none for now
 
 ## Notes
-- It is possible to play only one round of uno, if you wish to play more, you must leave the game and create a new game
+- There is only local database, so if you register as a user and you stop the server from running, you will have to register again
 
 ## Requirements
 
