@@ -1,4 +1,4 @@
-import type { Round } from "@model/dist/model/interfaces"
+import type { Round } from "@model/src/interfaces"
 
 interface Props {
     player: string

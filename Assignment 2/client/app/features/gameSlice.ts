@@ -1,4 +1,4 @@
-import type { Round } from "../../../model/dist/model/interfaces"
+import type { Round } from "@model/src/interfaces"
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 
 export interface GameState {

@@ -1,6 +1,5 @@
-import { Round, } from './interfaces'
+import { Round, GameProps, Game } from './interfaces'
 import { createRound, score } from './round'
-import { GameProps, Game } from './interfaces'
 import _ from "lodash"
 
 export function createGame(props: GameProps): Game {

@@ -1,9 +1,9 @@
 import { WebSocket, WebSocketServer } from "ws"
 import { v4 as uuid } from "uuid"
 import { register, login } from "./database"
-import { createGame } from "../../model/dist/model/uno"
-import { play, draw, catchUnoFailure, checkUnoFailure, sayUno } from "../../model/dist/model/round"
-import type { Game, Round } from "../../model/dist/model/interfaces"
+import { createGame } from "../../model/src/uno"
+import { play, draw, catchUnoFailure, checkUnoFailure, sayUno } from "../../model/src/round"
+import type { Game, Round } from "../../model/src/interfaces"
 
 export const lobby = new Map<string, LobbyGame>()
 export const runningGames = new Map<string, Game>()

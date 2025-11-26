@@ -27,7 +27,7 @@ open in browser
 
 ## Notes
 - There is only local database, so if you register as a user and you stop the server from running, you will have to register again
-- Game over screen is implemented as an alert()
+- Game over screen is implemented as an alert() and when you click on OK, it will redirect you to the lobby
 
 ## Requirements
 
@@ -52,7 +52,7 @@ open in browser
 - The play should proceed according to as much of the official Uno rules you implemented in assignment 1
 - Screen for setting up a game (lobby)
 - Screen for playing (game)
-- Using consistent composition or options API —----------- Not Vue ----------------
+- Using consistent composition or options API
 - The application should have a game over screen indicating the result
 
 #### From Assignment 3:
@@ -61,20 +61,14 @@ open in browser
 - Users can create a game
 - Users can join existing games
 - Users get notifications everytime something happens
-- Server uses GraphQL as the communication protocol — NEED TO CHECK, USING WEBSOCKETS ------------
 - Users can register and login
 
 ### Assignment 6
 - Features from Assignment 5
-- Uses Next.js for server-side rendering —---- NEED TO CHECK, PROBABLY NOT ---------------------
-- Works with “npm run dev” and “npm run build; npm run start” —-- WARNINGS ------
-
-Should have --------- ASK ----------------------
+- Uses Next.js for server-side rendering 
+- Works with “npm run dev” and “npm run build; npm run start”
 - The implementation should use both server and client components 
 - The design should make deliberate choices of when to use static vs dynamic pages
-
-Could have
-- The implementation could have its API implemented in Next.js ------- WEBSOCKET -------------------
 
 ## Commands for developmentne
 

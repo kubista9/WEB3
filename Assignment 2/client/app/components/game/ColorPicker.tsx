@@ -1,4 +1,4 @@
-import type { Card, Color } from "@model/dist/model/interfaces"
+import type { Card, Color } from "@model/src/interfaces"
 
 interface ColorPickerProps {
     show: boolean

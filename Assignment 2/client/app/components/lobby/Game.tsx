@@ -1,5 +1,4 @@
-import type { LobbyGame } from "../../api/lobbyApi"
-import { lobbyApi } from "../../api/lobbyApi"
+import { LobbyGame, lobbyApi } from "../../api/lobbyApi"
 
 interface Props {
     game: LobbyGame

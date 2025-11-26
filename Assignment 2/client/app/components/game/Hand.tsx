@@ -1,4 +1,4 @@
-import type { Card } from "@model/dist/model/interfaces"
+import type { Card } from "@model/src/interfaces"
 
 interface HandProps {
     hand: Card[]

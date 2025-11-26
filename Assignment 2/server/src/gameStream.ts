@@ -1,7 +1,7 @@
 import { Subject, scan } from 'rxjs'
-import { createGame } from '../../model/dist/model/uno'
-import { draw, sayUno, play } from '../../model/dist/model/round'
-import { Game } from '../../model/dist/model/interfaces'
+import { createGame } from "../../model/src/uno"
+import { draw, sayUno, play } from '../../model/src/round'
+import { Game } from '../../model/src/interfaces'
 
 export const actions$ = new Subject<{ type: string; payload?: any }>()
 let initialGame: Game = createGame({ players: ['A', 'B', 'C'] })
