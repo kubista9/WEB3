@@ -78,27 +78,27 @@ open in browser
 - The implementation should use both server and client components 
 - The design should make deliberate choices of when to use static vs dynamic pages
 
-## Commands for developmentne
+## Commands for development
 
 to install
 
     npm install
 
-to build, mostly for model
-
-    npm run build
-
 to test the whole suite
 
     npm test
+
+to run individual test
+
+    npx jest deck.test.ts
 
 to run the script
 
     npm run dev
 
-to run individual test
+or 
 
-    npx jest deck.test.ts
+    npm run start
 
 to create next js project
 
