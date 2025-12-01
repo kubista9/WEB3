@@ -10,9 +10,17 @@ in the root
 
 for server
 
+    npm install
+
+then
+
     npm run dev
 
 for client 
+
+    npm install
+
+then
 
     npm run dev
 
