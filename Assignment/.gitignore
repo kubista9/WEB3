@@ -32,3 +32,4 @@ coverage
 __test__
 .env
 package-lock.json
+*.zip
